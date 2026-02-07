@@ -2,6 +2,9 @@ from fastapi import APIRouter, HTTPException
 from backend.models import PaymentCreate, PaymentOut
 import backend.data as db
 from datetime import datetime, timedelta
+import qrcode
+import base64
+from io import BytesIO
 
 router = APIRouter()
 
@@ -33,3 +36,15 @@ def convert_payment(pay_in: PaymentCreate):
     sub["renewal_date"] = (now + timedelta(days=duration_days)).isoformat()
     
     return new_payment
+
+@router.get("/generate-qr")
+def generate_qr():
+    data = "https://cryp-sim.vercel.app/"
+    print("reached")
+    img = qrcode.make(data)
+    buffer = BytesIO()
+    img.save(buffer, format="PNG")
+
+    qr_base64 = base64.b64encode(buffer.getvalue()).decode()
+
+    return {"qr_base64": qr_base64}

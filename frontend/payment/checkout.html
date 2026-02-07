@@ -13,7 +13,7 @@
         <h2>Secure Checkout</h2>
         <p>Completing payment for Subscription #<span id="subId"></span></p>
 
-        <div style="margin: 2rem 0; font-size: 2rem; font-weight: bold; color: #2c3e50;">
+        <div style="margin: 2rem 0; font-size: 2rem; font-weight: bold; color: #2c3e50;" id="qr">
             $9.99
         </div>
         <p style="color:#666; font-size:0.9rem;">(Simulated Price display)</p>
@@ -69,6 +69,14 @@
                 btn.textContent = "PAY NOW";
             }
         });
+    </script>
+    <script>
+        fetch("http://localhost:8000/api/payments/generate-qr")
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById("qr").src =
+                    "data:image/png;base64," + data.qr_base64;
+            });
     </script>
 </body>
 
