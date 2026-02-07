@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Checkout - Billing System</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+
+<body style="display:flex; justify-content:center; align-items:center; height:100vh;">
+
+    <div class="card" style="width: 400px; text-align: center;">
+        <h2>Secure Checkout</h2>
+        <p>Completing payment for Subscription #<span id="subId"></span></p>
+
+        <div style="margin: 2rem 0; font-size: 2rem; font-weight: bold; color: #2c3e50;">
+            $9.99
+        </div>
+        <p style="color:#666; font-size:0.9rem;">(Simulated Price display)</p>
+
+        <button id="payButton" style="width: 100%; font-size: 1.2rem; padding: 1rem; background-color: #27ae60;">
+            PAY NOW
+        </button>
+
+        <div id="message" style="margin-top: 1rem; display: none;"></div>
+
+        <br><br>
+        <a href="../user/dashboard.html">Cancel / Return to Dashboard</a>
+    </div>
+
+    <script src="../config.js"></script>
+    <script>
+        requireAuth('user');
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const subId = urlParams.get('sub_id');
+        document.getElementById('subId').textContent = subId;
+
+        document.getElementById('payButton').addEventListener('click', async () => {
+            const btn = document.getElementById('payButton');
+            btn.disabled = true;
+            btn.textContent = "Processing...";
+
+            try {
+                const res = await fetch(`${API_URL}/payments/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        subscription_id: parseInt(subId),
+                        amount: 9.99 // Simulating fixed amount for now
+                    })
+                });
+
+                if (res.ok) {
+                    const msg = document.getElementById('message');
+                    msg.style.display = 'block';
+                    msg.style.color = 'green';
+                    msg.innerHTML = '<strong>Payment Successful!</strong><br>Redirecting to dashboard...';
+
+                    setTimeout(() => {
+                        window.location.href = '../user/dashboard.html';
+                    }, 2000);
+                } else {
+                    throw new Error("Payment Failed");
+                }
+            } catch (err) {
+                alert(err.message);
+                btn.disabled = false;
+                btn.textContent = "PAY NOW";
+            }
+        });
+    </script>
+</body>
+
+</html>

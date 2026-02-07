@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>User Dashboard</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+
+<body>
+    <header>
+        <div id="welcomeMsg">Welcome, User</div>
+        <div class="navbar">
+            <a href="#" onclick="logout()">Logout</a>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- My Subscriptions -->
+        <div class="card">
+            <h2>My Subscriptions</h2>
+            <div id="mySubs">Loading...</div>
+        </div>
+
+        <!-- Available Plans -->
+        <div class="card">
+            <h2>Available Plans</h2>
+            <div id="availablePlans"
+                style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem;">
+                <!-- Plans injected here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="../config.js"></script>
+    <script>
+        requireAuth('user');
+        const user = getUser();
+        document.getElementById('welcomeMsg').textContent = `User Dashboard - ${user.name}`;
+
+        async function loadMySubs() {
+            const container = document.getElementById('mySubs');
+            try {
+                const res = await fetch(`${API_URL}/subscriptions/?user_id=${user.id}`);
+                if (!res.ok) throw new Error(`Failed to fetch subscriptions (${res.status} ${res.statusText})`);
+                const subs = await res.json();
+
+                if (subs.length === 0) {
+                    container.innerHTML = '<p>No subscriptions yet.</p>';
+                    return;
+                }
+
+                container.innerHTML = `<table style="width:100%">
+                    <tr><th>Plan ID</th><th>Status</th><th>Renewal</th><th>Action</th></tr>
+                    ${subs.map(s => {
+                    const isPending = s.status === 'pending';
+                    return `
+                        <tr>
+                            <td>${s.plan_id}</td>
+                            <td class="status-${s.status}">${s.status.toUpperCase()}</td>
+                            <td>${s.renewal_date ? s.renewal_date.split('T')[0] : '-'}</td>
+                            <td>
+                                ${isPending
+                            ? `<a href="../payment/checkout.html?sub_id=${s.id}"><button>Pay Now</button></a>`
+                            : '-'}
+                            </td>
+                        </tr>`;
+                }).join('')}
+                </table>`;
+            } catch (err) {
+                container.innerHTML = `<p style="color:red">Error: ${err.message}</p>`;
+            }
+        }
+
+        async function loadPlans() {
+            const container = document.getElementById('availablePlans');
+            try {
+                const res = await fetch(`${API_URL}/plans/`);
+                if (!res.ok) throw new Error("Failed to fetch plans");
+                const plans = await res.json();
+
+                container.innerHTML = plans.map(p => `
+                    <div style="border:1px solid #ddd; padding:1rem; border-radius:8px; text-align:center;">
+                        <h3>${p.plan_name}</h3>
+                        <p style="font-size:1.5rem; font-weight:bold;">$${p.price}</p>
+                        <p>${p.duration_days} Days</p>
+                        <button onclick="subscribe(${p.id})">Subscribe</button>
+                    </div>
+                `).join('');
+            } catch (err) {
+                container.innerHTML = `<p style="color:red">Error: ${err.message}</p>`;
+            }
+        }
+
+        async function subscribe(planId) {
+            try {
+                const res = await fetch(`${API_URL}/subscriptions/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: user.id,
+                        plan_id: planId
+                    })
+                });
+
+                if (res.ok) {
+                    const sub = await res.json();
+                    window.location.href = `../payment/checkout.html?sub_id=${sub.id}`;
+                } else {
+                    alert("Failed to subscribe");
+                }
+            } catch (err) {
+                alert(err.message);
+            }
+        }
+
+        loadMySubs();
+        loadPlans();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Register - Billing System</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+
+<body style="display:flex; justify-content:center; align-items:center; height:100vh;">
+
+    <div class="card" style="width: 350px;">
+        <h2>Register</h2>
+        <form id="registerForm">
+            <label>Name</label>
+            <input type="text" id="name" required>
+
+            <label>Email</label>
+            <input type="email" id="email" required>
+
+            <label>Password</label>
+            <input type="password" id="password" required>
+
+            <label>Role</label>
+            <select id="role">
+                <option value="user">Customer</option>
+                <option value="company">Company</option>
+            </select>
+
+            <button type="submit" style="width:100%">Register</button>
+        </form>
+        <p style="text-align:center; margin-top:1rem;">
+            Already have an account? <a href="login.html">Login</a>
+        </p>
+    </div>
+
+    <script src="../config.js"></script>
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const role = document.getElementById('role').value;
+
+            try {
+                const res = await fetch(`${API_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, password, role })
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.detail || 'Registration failed');
+                }
+
+                alert('Registration successful! Please login.');
+                window.location.href = 'login.html';
+            } catch (err) {
+                alert(err.message);
+            }
+        });
+    </script>
+</body>
+
+</html>

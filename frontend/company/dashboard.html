@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Company Dashboard</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+
+<body>
+    <header>
+        <div id="welcomeMsg">Welcome, Company</div>
+        <div class="navbar">
+            <a href="#" onclick="logout()">Logout</a>
+        </div>
+    </header>
+
+    <div class="container">
+
+        <!-- Create Plan Section -->
+        <div class="card">
+            <h2>Create New Plan</h2>
+            <form id="createPlanForm">
+                <div style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 10px; align-items: end;">
+                    <div>
+                        <label>Plan Name</label>
+                        <input type="text" id="planName" required style="margin:0">
+                    </div>
+                    <div>
+                        <label>Price ($)</label>
+                        <input type="number" step="0.01" id="price" required style="margin:0">
+                    </div>
+                    <div>
+                        <label>Duration (Days)</label>
+                        <input type="number" id="duration" value="30" required style="margin:0">
+                    </div>
+                    <button type="submit">Create</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Plans List -->
+        <div class="card">
+            <h2>My Plans</h2>
+            <table id="plansTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Price</th>
+                        <th>Duration</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <!-- Subscribers List -->
+        <div class="card">
+            <h2>Recent Subscribers</h2>
+            <table id="subsTable">
+                <thead>
+                    <tr>
+                        <th>Sub ID</th>
+                        <th>User ID</th>
+                        <th>Plan ID</th>
+                        <th>Status</th>
+                        <th>Renewal</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="../config.js"></script>
+    <script>
+        requireAuth('company');
+        const user = getUser();
+        document.getElementById('welcomeMsg').textContent = `Company Dashboard - ${user.name}`;
+
+        // Load Plans
+        async function loadPlans() {
+            try {
+                const res = await fetch(`${API_URL}/plans/?company_id=${user.id}`);
+                if (!res.ok) throw new Error(`Failed to fetch plans (${res.status})`);
+                const plans = await res.json();
+
+                const tbody = document.querySelector('#plansTable tbody');
+                tbody.innerHTML = plans.map(p => `
+                    <tr>
+                        <td>${p.id}</td>
+                        <td>${p.plan_name}</td>
+                        <td>$${p.price}</td>
+                        <td>${p.duration_days} Days</td>
+                        <td>-</td>
+                    </tr>
+                `).join('');
+                loadSubscribers(plans);
+            } catch (err) {
+                console.error(err);
+                document.querySelector('#plansTable tbody').innerHTML = `<tr><td colspan="5" style="color:red">Error loading plans: ${err.message}</td></tr>`;
+            }
+        }
+
+        // Load Subscribers (For all company plans)
+        async function loadSubscribers(plans) {
+            const tbody = document.querySelector('#subsTable tbody');
+            tbody.innerHTML = '';
+
+            for (const plan of plans) {
+                try {
+                    const res = await fetch(`${API_URL}/subscriptions/?plan_id=${plan.id}`);
+                    if (!res.ok) throw new Error(`Failed to fetch subs for plan ${plan.id}`);
+                    const subs = await res.json();
+
+                    subs.forEach(s => {
+                        const row = `
+                            <tr>
+                                <td>${s.id}</td>
+                                <td>${s.user_id}</td>
+                                <td>${s.plan_id} (${plan.plan_name})</td>
+                                <td class="status-${s.status}">${s.status.toUpperCase()}</td>
+                                <td>${s.renewal_date ? s.renewal_date.split('T')[0] : 'N/A'}</td>
+                            </tr>
+                        `;
+                        tbody.insertAdjacentHTML('beforeend', row);
+                    });
+                } catch (err) {
+                    console.error(err);
+                    tbody.insertAdjacentHTML('beforeend', `<tr><td colspan="5" style="color:red">Error loading subs for plan ${plan.id}: ${err.message}</td></tr>`);
+                }
+            }
+        }
+
+        // Create Plan
+        document.getElementById('createPlanForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const plan_name = document.getElementById('planName').value;
+            const price = parseFloat(document.getElementById('price').value);
+            const duration_days = parseInt(document.getElementById('duration').value);
+
+            await fetch(`${API_URL}/plans/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    company_id: user.id,
+                    plan_name, price, duration_days
+                })
+            });
+
+            document.getElementById('createPlanForm').reset();
+            loadPlans();
+        });
+
+        loadPlans();
+    </script>
+</body>
+
+</html>
