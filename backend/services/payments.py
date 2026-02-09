@@ -39,7 +39,7 @@ def convert_payment(pay_in: PaymentCreate):
 
 @router.get("/generate-qr")
 def generate_qr():
-    data = "https://cryp-sim.vercel.app/"
+    data = "https://dbms-project-sem-4.vercel.app/"
     print("reached")
     img = qrcode.make(data)
     buffer = BytesIO()
