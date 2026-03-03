@@ -8,35 +8,91 @@
 </head>
 
 <body>
-    <header>
-        <div id="welcomeMsg">Welcome, User</div>
-        <div class="navbar">
-            <a href="#" onclick="logout()">Logout</a>
-        </div>
-    </header>
-
-    <div class="container">
-        <!-- My Subscriptions -->
-        <div class="card">
-            <h2>My Subscriptions</h2>
-            <div id="mySubs">Loading...</div>
-        </div>
-
-        <!-- Available Plans -->
-        <div class="card">
-            <h2>Available Plans</h2>
-            <div id="availablePlans"
-                style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem;">
-                <!-- Plans injected here -->
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <span class="sidebar-title">Billing Sys</span>
+                <button class="sidebar-toggle" onclick="toggleSidebar()" title="Toggle Sidebar">☰</button>
             </div>
-        </div>
+            <nav class="sidebar-nav">
+                <div class="nav-item active" id="tab-btn-market" onclick="switchTab('market')">
+                    <span class="nav-icon">🛒</span>
+                    <span class="nav-text">Market</span>
+                </div>
+                <div class="nav-item" id="tab-btn-subs" onclick="switchTab('subs')">
+                    <span class="nav-icon">📜</span>
+                    <span class="nav-text">My Subscriptions</span>
+                </div>
+            </nav>
+            <div class="sidebar-footer" style="padding: 1rem; border-top: 1px solid #34495e;">
+                <div class="nav-item" onclick="logout()">
+                    <span class="nav-icon">🚪</span>
+                    <span class="nav-text">Logout</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="flex-between" style="background: none; color: #333; padding: 0 0 2rem 0;">
+                <h1 id="welcomeMsg" style="margin: 0;">User Dashboard</h1>
+                <div class="user-profile" style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span id="userName" style="font-weight: bold;">User</span>
+                    <div
+                        style="width: 40px; height: 40px; background: #3498db; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                        U</div>
+                </div>
+            </header>
+
+            <!-- Market Tab -->
+            <div id="tab-market" class="tab-content active">
+                <div class="card">
+                    <div class="flex-between" style="margin-bottom: 1.5rem;">
+                        <h2 style="margin: 0;">Available Plans</h2>
+                        <span style="color: #666;">Explore our best offers</span>
+                    </div>
+                    <div id="availablePlans"
+                        style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1.5rem;">
+                        <!-- Plans injected here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Subscriptions Tab -->
+            <div id="tab-subs" class="tab-content">
+                <div class="card">
+                    <h2 style="margin-bottom: 1.5rem;">My Subscriptions</h2>
+                    <div id="mySubs">Loading...</div>
+                </div>
+            </div>
+        </main>
     </div>
 
     <script src="../config.js"></script>
     <script>
         requireAuth('user');
         const user = getUser();
-        document.getElementById('welcomeMsg').textContent = `User Dashboard - ${user.name}`;
+        document.getElementById('userName').textContent = user.name;
+        document.getElementById('welcomeMsg').textContent = `Welcome, ${user.name.split(' ')[0]}!`;
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('retracted');
+        }
+
+        function switchTab(tabId) {
+            // Update Tab Content
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active');
+
+            // Update Nav Items
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            document.getElementById('tab-btn-' + tabId).classList.add('active');
+
+            // Load data if needed
+            if (tabId === 'subs') loadMySubs();
+            if (tabId === 'market') loadPlans();
+        }
 
         async function loadMySubs() {
             const container = document.getElementById('mySubs');
@@ -50,22 +106,26 @@
                     return;
                 }
 
-                container.innerHTML = `<table style="width:100%">
-                    <tr><th>Plan ID</th><th>Status</th><th>Renewal</th><th>Action</th></tr>
-                    ${subs.map(s => {
+                container.innerHTML = `<table>
+                    <thead>
+                        <tr><th>Plan</th><th>Status</th><th>Renewal Date</th><th>Action</th></tr>
+                    </thead>
+                    <tbody>
+                        ${subs.map(s => {
                     const isPending = s.status === 'pending';
                     return `
-                        <tr>
-                            <td>${s.plan_id}</td>
-                            <td class="status-${s.status}">${s.status.toUpperCase()}</td>
-                            <td>${s.renewal_date ? s.renewal_date.split('T')[0] : '-'}</td>
-                            <td>
-                                ${isPending
+                                <tr>
+                                    <td><strong>Plan #${s.plan_id}</strong></td>
+                                    <td><span class="status-${s.status}">${s.status.toUpperCase()}</span></td>
+                                    <td>${s.renewal_date ? s.renewal_date.split('T')[0] : '-'}</td>
+                                    <td>
+                                        ${isPending
                             ? `<a href="../payment/checkout.html?sub_id=${s.id}"><button>Pay Now</button></a>`
-                            : '-'}
-                            </td>
-                        </tr>`;
+                            : '<span style="color: #999;">-</span>'}
+                                    </td>
+                                </tr>`;
                 }).join('')}
+                    </tbody>
                 </table>`;
             } catch (err) {
                 container.innerHTML = `<p style="color:red">Error: ${err.message}</p>`;
@@ -80,11 +140,14 @@
                 const plans = await res.json();
 
                 container.innerHTML = plans.map(p => `
-                    <div style="border:1px solid #ddd; padding:1rem; border-radius:8px; text-align:center;">
-                        <h3>${p.plan_name}</h3>
-                        <p style="font-size:1.5rem; font-weight:bold;">$${p.price}</p>
-                        <p>${p.duration_days} Days</p>
-                        <button onclick="subscribe(${p.id})">Subscribe</button>
+                    <div style="border: 1px solid #eee; padding: 2rem; border-radius: 12px; text-align: center; background: #fff; transition: transform 0.2s, box-shadow 0.2s; cursor: pointer;" 
+                         onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 10px 20px rgba(0,0,0,0.05)'"
+                         onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                        <div style="font-size: 2rem; margin-bottom: 1rem;">💎</div>
+                        <h3 style="margin: 0.5rem 0; color: #2c3e50;">${p.plan_name}</h3>
+                        <p style="font-size: 2rem; font-weight: bold; color: #3498db; margin: 1rem 0;">$${p.price}</p>
+                        <p style="color: #666; margin-bottom: 1.5rem;">Duration: ${p.duration_days} Days</p>
+                        <button style="width: 100%; padding: 0.8rem;" onclick="subscribe(${p.id})">Subscribe Now</button>
                     </div>
                 `).join('');
             } catch (err) {
@@ -114,7 +177,7 @@
             }
         }
 
-        loadMySubs();
+        // Initial Load
         loadPlans();
     </script>
 </body>
