@@ -25,6 +25,7 @@ class PlanCreate(BaseModel):
     plan_name: str
     price: float
     duration_days: int
+    image_url: Optional[str] = None
 
 class PlanOut(PlanCreate):
     id: int
@@ -38,6 +39,8 @@ class SubscriptionOut(BaseModel):
     id: int
     user_id: int
     plan_id: int
+    plan_name: Optional[str] = None
+    image_url: Optional[str] = None
     status: str
     start_date: Optional[str]
     renewal_date: Optional[str]
@@ -50,3 +53,7 @@ class PaymentCreate(BaseModel):
 class PaymentOut(PaymentCreate):
     id: int
     status: str
+
+class UPIPaymentRequest(BaseModel):
+    user_id: int
+    pin: str

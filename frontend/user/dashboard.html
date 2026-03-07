@@ -106,6 +106,8 @@
                     return;
                 }
 
+                console.log('Fetched subscriptions:', subs);
+
                 container.innerHTML = `<table>
                     <thead>
                         <tr><th>Plan</th><th>Status</th><th>Renewal Date</th><th>Action</th></tr>
@@ -113,9 +115,18 @@
                     <tbody>
                         ${subs.map(s => {
                     const isPending = s.status === 'pending';
+                    const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(s.plan_name || 'P')}&background=3498db&color=fff`;
+
                     return `
                                 <tr>
-                                    <td><strong>Plan #${s.plan_id}</strong></td>
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                            <img src="${s.image_url || fallbackUrl}" 
+                                                 onerror="this.src='${fallbackUrl}'"
+                                                 style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%; border: 1px solid #eee;">
+                                            <strong>${s.plan_name || 'Plan #' + s.id}</strong>
+                                        </div>
+                                    </td>
                                     <td><span class="status-${s.status}">${s.status.toUpperCase()}</span></td>
                                     <td>${s.renewal_date ? s.renewal_date.split('T')[0] : '-'}</td>
                                     <td>
@@ -140,10 +151,10 @@
                 const plans = await res.json();
 
                 container.innerHTML = plans.map(p => `
-                    <div style="border: 1px solid #eee; padding: 2rem; border-radius: 12px; text-align: center; background: #fff; transition: transform 0.2s, box-shadow 0.2s; cursor: pointer;" 
+                    <div style="border: 1px solid #eee; padding: 0.5rem; border-radius: 12px; text-align: center; background: #fff; transition: transform 0.2s, box-shadow 0.2s; cursor: pointer;" 
                          onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 10px 20px rgba(0,0,0,0.05)'"
                          onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
-                        <div style="font-size: 2rem; margin-bottom: 1rem;">💎</div>
+                        <img src="${p.image_url || 'https://via.placeholder.com/150'}" style="width: 100%; height: 150px; object-fit: cover; border-radius: 8px; margin-bottom: 1rem;">
                         <h3 style="margin: 0.5rem 0; color: #2c3e50;">${p.plan_name}</h3>
                         <p style="font-size: 2rem; font-weight: bold; color: #3498db; margin: 1rem 0;">$${p.price}</p>
                         <p style="color: #666; margin-bottom: 1.5rem;">Duration: ${p.duration_days} Days</p>

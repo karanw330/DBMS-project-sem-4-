@@ -48,3 +48,22 @@ def generate_qr():
     qr_base64 = base64.b64encode(buffer.getvalue()).decode()
 
     return {"qr_base64": qr_base64}
+
+from backend.models import UPIPaymentRequest
+
+@router.post("/upi-payment")
+def upi_payment(req: UPIPaymentRequest):
+    # Find user
+    user = next((u for u in db.users if u["id"] == req.user_id), None)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Check role
+    if user.get("role") != "user":
+        raise HTTPException(status_code=403, detail="Access denied: Only users can make UPI payments")
+    
+    # Check PIN
+    if user.get("upi") != req.pin:
+        raise HTTPException(status_code=401, detail="Incorrect UPI PIN")
+    
+    return {"status": "success", "message": "UPI PIN verified successfully"}

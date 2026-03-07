@@ -57,6 +57,7 @@
                         <thead>
                             <tr>
                                 <th>ID</th>
+                                <th>Plan Image</th>
                                 <th>Plan Name</th>
                                 <th>Price</th>
                                 <th>Duration</th>
@@ -99,16 +100,21 @@
                                 <input type="text" id="planName" required placeholder="e.g. Pro Monthly">
                             </div>
                             <div style="display: flex; gap: 1rem;">
-                                <div style="flex: 1;">
-                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Price
-                                        ($)</label>
-                                    <input type="number" step="0.01" id="price" required placeholder="19.99">
+                                <div style="flex: 2;">
+                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Image
+                                        URL</label>
+                                    <input type="url" id="image_url" placeholder="https://example.com/image.png">
                                 </div>
                                 <div style="flex: 1;">
                                     <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Duration
                                         (Days)</label>
                                     <input type="number" id="duration" value="30" required>
                                 </div>
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Price
+                                    ($)</label>
+                                <input type="number" step="0.01" id="price" required placeholder="19.99">
                             </div>
                             <button type="submit" style="padding: 0.8rem; margin-top: 1rem;">Create Plan</button>
                         </div>
@@ -154,6 +160,7 @@
                 tbody.innerHTML = plans.map(p => `
                     <tr>
                         <td>#${p.id}</td>
+                        <td><img src="${p.image_url || 'https://via.placeholder.com/50'}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;"></td>
                         <td><strong>${p.plan_name}</strong></td>
                         <td style="color: #3498db; font-weight: bold;">$${p.price}</td>
                         <td>${p.duration_days} Days</td>
@@ -208,6 +215,7 @@
             const plan_name = document.getElementById('planName').value;
             const price = parseFloat(document.getElementById('price').value);
             const duration_days = parseInt(document.getElementById('duration').value);
+            const image_url = document.getElementById('image_url').value;
 
             try {
                 const res = await fetch(`${API_URL}/plans/`, {
@@ -215,7 +223,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         company_id: user.id,
-                        plan_name, price, duration_days
+                        plan_name, price, duration_days, image_url
                     })
                 });
 
