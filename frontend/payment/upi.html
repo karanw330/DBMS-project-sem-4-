@@ -891,13 +891,16 @@
 
     <script src="../config.js"></script>
     <script>
-        // Enforce Authentication
-        requireAuth('user');
+        // Remove requireAuth('user'); // Allow paying without login (e.g. mobile scan)
 
         // Parse URL Parameters
         const params = new URLSearchParams(window.location.search);
         const subId = params.get('sub_id');
-        const user = getUser();
+        let userId = params.get('user_id'); // From QR URL
+        const loggedInUser = getUser();
+
+        // Use logged in user ID if available, otherwise from URL
+        if (!userId && loggedInUser) userId = loggedInUser.id;
 
         let subData = null;
         let pinValue = '';
@@ -907,17 +910,20 @@
         async function initCheckout() {
             if (!subId) {
                 alert("Missing subscription ID");
-                window.location.href = "/user/dashboard.html";
+                window.location.href = "../user/dashboard.html";
                 return;
             }
 
-            if (!user) return; // Should be handled by requireAuth
+            if (!userId) {
+                alert("Missing user ID. Please scan the QR code again.");
+                return;
+            }
 
             try {
-                // Fetch Subscription Details
-                const res = await fetch(`${API_URL}/subscriptions/?user_id=${user.id}`);
-                const subs = await res.json();
-                subData = subs.find(s => s.id == subId);
+                // Fetch Subscription Details directly
+                const res = await fetch(`${API_URL}/subscriptions/${subId}`);
+                const subDataResponse = await res.json();
+                subData = subDataResponse;
 
                 if (!subData) {
                     alert("Subscription not found");
@@ -934,7 +940,7 @@
                 document.querySelector('.success-title').textContent = `Payment of ₹${price} successful!`;
 
                 // Fetch QR for verification if needed (background)
-                const qrRes = await fetch(`${API_URL}/payments/generate-qr?amount=${price}&order_id=${subId}&user_id=${user.id}`);
+                const qrRes = await fetch(`${API_URL}/payments/generate-qr?amount=${price}&order_id=${subId}&user_id=${userId}`);
                 if (!qrRes.ok) throw new Error(`QR generation failed: ${qrRes.status}`);
 
                 const qrData = await qrRes.json();
@@ -973,7 +979,7 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        user_id: user.id,
+                        user_id: parseInt(userId),
                         subscription_id: parseInt(subId),
                         pin: pinValue
                     })
