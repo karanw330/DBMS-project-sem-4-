@@ -794,14 +794,6 @@
 
 <body>
     <div class="mobile-container">
-        <div class="status-bar">
-            <div class="time">9:41</div>
-            <div class="status-icons">
-                <span class="signal">📶</span>
-                <span class="wifi">📡</span>
-                <span class="battery">🔋</span>
-            </div>
-        </div>
 
         <div class="header">
             <button class="close-btn">✕</button>
@@ -820,12 +812,12 @@
                 </svg>
             </div>
 
-            <div class="merchant-name">Paying Doordash</div>
-            <div class="merchant-upi">doordash.upi@axisbank</div>
+            <div class="merchant-name">Paying </div>
+            <div class="merchant-upi">stellarbilling.upi@axisbank</div>
 
-            <div class="amount">₹299.00</div>
+            <div class="amount">₹</div>
 
-            <div class="order-id">Doordash Order Id 151091256777</div>
+            <div class="order-id"> Order Id 151091256777</div>
         </div>
 
         <div class="payment-method-section">
@@ -848,7 +840,7 @@
             </div>
         </div>
 
-        <button class="pay-button" onclick="processPayment()">Pay ₹ 299</button>
+        <button class="pay-button" onclick="processPayment()">Pay ₹</button>
 
         <div class="powered-by">
             POWERED BY <strong>UPI</strong> | <strong>AXIS BANK</strong>
@@ -862,10 +854,6 @@
         <div class="pin-modal">
             <div class="pin-header">
                 <div class="pin-title">ENTER UPI PIN</div>
-                <button class="show-pin-btn" onclick="togglePinVisibility()">
-                    <span class="eye-icon">👁</span>
-                    <span id="showPinText">SHOW</span>
-                </button>
             </div>
 
             <div class="pin-dots">
@@ -884,8 +872,9 @@
     <div id="successScreen" class="success-screen">
         <div class="success-content">
             <div class="success-icon"></div>
-            <div class="success-title">Payment of ₹899 successful!</div>
-            <div class="success-message">Your order will arrive in 10 mins, sit tight ;)</div>
+            <div class="success-title">Payment of ₹ successful!</div>
+            <div class="success-message">Thank you for your purchase, your subscription will be active in a moment ;)
+            </div>
         </div>
     </div>
 
