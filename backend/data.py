@@ -51,20 +51,20 @@ def seed_data():
     plans.append({
         "id": plan_id_counter,
         "company_id": company_id,
-        "plan_name": "Basic Plan",
-        "price": 9.99,
+        "plan_name": "Netlflix Monthly",
+        "price": 499,
         "duration_days": 30,
-        "image_url": "https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=800&auto=format&fit=crop&q=60"
+        "image_url": "https://images.icon-icons.com/2699/PNG/512/netflix_logo_icon_170919.png"
     })
     plan_id_counter += 1
 
     plans.append({
         "id": plan_id_counter,
         "company_id": company_id,
-        "plan_name": "Pro Plan",
-        "price": 29.99,
+        "plan_name": "Apple TV Yearly",
+        "price": 12999,
         "duration_days": 365,
-        "image_url": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=60"
+        "image_url": "https://images.icon-icons.com/2890/PNG/512/apps_technology_logo_apple_tv_television_smart_tv_connect_icon_182742.png"
     })
     plan_id_counter += 1
     
