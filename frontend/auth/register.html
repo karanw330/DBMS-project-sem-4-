@@ -3,35 +3,68 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Register - Billing System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Stellar Billing</title>
     <link rel="stylesheet" href="../style.css">
 </head>
 
-<body style="display:flex; justify-content:center; align-items:center; height:100vh;">
+<body>
+    <div class="dashboard-layout" style="display: flex;">
+        <!-- Left Side: Branding/Illustration -->
+        <div style="flex: 1.2; background: linear-gradient(135deg, rgba(13, 15, 20, 0.8) 0%, rgba(26, 20, 46, 0.8) 50%, rgba(37, 27, 69, 0.8) 100%), url('https://lh3.googleusercontent.com/aida-public/AB6AXuBqYrk9yClnICC984wUpV72_uy2QLoBx9vXcgE9GQzkOJq7g2kmnDLqsxjlUlcsPl5N74OwXjRcDsBA9BPU126cOKtQjreqlB7VUqt7sZlnhfLesD6_g-9KoTTP5_ygBAssYfijnz6SCZOMyqx4wKnN5muLYQtsg2NPx-3jCbJiA6kjOsFr3FgNDgvDUuUETTKYfZBT8rbN_SBVKY1Ry0OAOQm4TZOyDt8FxOQoro4u0MKusOfuW70icBxa_MIYl_tyGu1O-DbnOODg'); background-size: cover; background-position: center; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 4rem; position: relative; overflow: hidden;"
+            class="branding-section">
 
-    <div class="card" style="width: 350px;">
-        <h2>Register</h2>
-        <form id="registerForm">
-            <label>Name</label>
-            <input type="text" id="name" required>
+            <div style="z-index: 10; text-align: center;">
+                <div
+                    style="font-size: 5rem; margin-bottom: 1rem; filter: drop-shadow(0 0 20px rgba(168, 85, 247, 0.4));">
+                    🚀</div>
+                <h1 style="font-size: 4rem; font-weight: 800; margin-bottom: 1.5rem; line-height: 1;">Join
+                    the<br>Stellar Era</h1>
+                <p style="font-size: 1.25rem; color: var(--text-secondary); max-width: 400px;">Create your account and
+                    start managing subscriptions with premium precision.</p>
+            </div>
+        </div>
 
-            <label>Email</label>
-            <input type="email" id="email" required>
+        <!-- Right Side: Register Form -->
+        <div style="flex: 1; display: flex; justify-content: center; align-items: center; padding: 2rem;">
+            <div class="card" style="width: 100%; max-width: 500px; border-radius: 32px;">
+                <h2 style="margin-bottom: 0.5rem; font-size: 2rem;">Register</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 2rem;">Get started with Stellar Billing today</p>
 
-            <label>Password</label>
-            <input type="password" id="password" required>
+                <form id="registerForm">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                        <div style="grid-column: span 2;">
+                            <label>Full Name</label>
+                            <input type="text" id="name" required placeholder="John Doe">
+                        </div>
+                        <div style="grid-column: span 2;">
+                            <label>Email Address</label>
+                            <input type="email" id="email" required placeholder="name@company.com">
+                        </div>
+                        <div style="grid-column: span 2;">
+                            <label>Password</label>
+                            <input type="password" id="password" required placeholder="••••••••">
+                        </div>
+                        <div style="grid-column: span 2;">
+                            <label>Account Type</label>
+                            <select id="role"
+                                style="background: rgba(255, 255, 255, 0.05); border: 1px solid var(--card-border); border-radius: 12px; padding: 0.8rem 1rem; color: white; width: 100%; margin-bottom: 1rem;">
+                                <option value="user" style="background: var(--bg-color);">Customer / Subscriber</option>
+                                <option value="company" style="background: var(--bg-color);">Company / Merchant</option>
+                            </select>
+                        </div>
+                    </div>
 
-            <label>Role</label>
-            <select id="role">
-                <option value="user">Customer</option>
-                <option value="company">Company</option>
-            </select>
+                    <button type="submit" style="width: 100%; height: 56px; font-size: 1.1rem; margin-top: 1rem;">
+                        Create Your Account
+                    </button>
+                </form>
 
-            <button type="submit" style="width:100%">Register</button>
-        </form>
-        <p style="text-align:center; margin-top:1rem;">
-            Already have an account? <a href="index.html">Login</a>
-        </p>
+                <p style="text-align: center; margin-top: 2rem; color: var(--text-secondary);">
+                    Already have an account? <a href="../index.html">Login here</a>
+                </p>
+            </div>
+        </div>
     </div>
 
     <script src="../config.js"></script>

@@ -3,35 +3,54 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Checkout - Billing System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Checkout - Stellar Billing</title>
     <link rel="stylesheet" href="../style.css">
 </head>
 
 <body style="display:flex; justify-content:center; align-items:center; height:100vh;">
 
-    <div class="card" style="width: 400px; text-align: center;">
-        <h2>Secure Checkout</h2>
-        <p>Scan the QR code to complete payment for:</p>
-        <h3 id="planName" style="color: #2c3e50;">...</h3>
-        <p style="color: #666; font-size: 0.8rem;">Subscription #<span id="subIdText"></span></p>
-
-        <div style="margin: 2rem 0;">
-            <div id="qrLoading" style="margin-bottom: 1rem; color: #666;">Generating QR Code...</div>
-            <a id="qrLink" href="#">
-                <img id="qr"
-                    style="width: 250px; height: 250px; border: 1px solid #eee; border-radius: 12px; padding: 10px; display: none;">
-            </a>
-            <div style="font-size: 1.5rem; font-weight: bold; color: #3498db; margin-top: 1rem;">
-                ₹<span id="amountDisplay">...</span>
-            </div>
+    <div class="card"
+        style="width: 100%; max-width: 480px; text-align: center; border-radius: 32px; position: relative; overflow: hidden;">
+        <div
+            style="position: absolute; top: -50px; left: -50px; width: 150px; height: 150px; background: var(--accent-glow); filter: blur(60px); opacity: 0.3; z-index: 0;">
         </div>
 
-        <p style="color: #999; font-size: 0.9rem; margin-bottom: 2rem;">
-            This QR code will redirect you to the mobile payment page.
-        </p>
+        <div style="position: relative; z-index: 1;">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">🛡️</div>
+            <h2 style="font-size: 2rem; margin-bottom: 0.5rem;">Secure Checkout</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 2rem;">Scan the QR code to complete payment for:</p>
 
-        <a href="../user/dashboard.html" style="color: #e74c3c; text-decoration: none; font-weight: 600;">Cancel /
-            Return to Dashboard</a>
+            <div
+                style="background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); border-radius: 20px; padding: 1.5rem; margin-bottom: 2rem;">
+                <h3 id="planName" style="color: white; font-size: 1.4rem; margin-bottom: 0.25rem;">...</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">Subscription #<span id="subIdText"></span>
+                </p>
+                <div style="font-size: 2.5rem; font-weight: 800; color: var(--accent-primary); margin-top: 1rem;">
+                    ₹<span id="amountDisplay">...</span>
+                </div>
+            </div>
+
+            <div style="margin: 2.5rem 0;">
+                <div id="qrLoading" style="margin-bottom: 1rem; color: var(--text-secondary); font-style: italic;">✨
+                    Generating Secure QR Code...</div>
+                <a id="qrLink" href="#">
+                    <img id="qr"
+                        style="width: 260px; height: 260px; border: 2px solid var(--accent-primary); border-radius: 24px; padding: 12px; display: none; background: white; box-shadow: 0 0 20px var(--accent-glow);">
+                </a>
+            </div>
+
+            <p
+                style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 2.5rem; line-height: 1.5; padding: 0 1rem;">
+                This secure QR code will redirect you to the mobile payment gateway. Please keep this page open until
+                confirmed.
+            </p>
+
+            <a href="../user/dashboard.html"
+                style="color: var(--danger); font-weight: 600; font-size: 0.95rem; opacity: 0.8; transition: opacity 0.2s;">
+                ← Cancel & Return to Dashboard
+            </a>
+        </div>
     </div>
 
     <script src="../config.js"></script>
@@ -42,30 +61,27 @@
         const subId = urlParams.get('sub_id');
         const user = getUser();
 
-        document.getElementById('subIdText').textContent = subId;
+        if (subId) document.getElementById('subIdText').textContent = subId.toString().slice(-6);
 
         async function initCheckout() {
             if (!subId || !user) return;
 
             try {
-                // 1. Fetch Subscription Details
                 const res = await fetch(`${API_URL}/subscriptions/?user_id=${user.id}`);
                 const subs = await res.json();
                 const subData = subs.find(s => s.id == subId);
 
                 if (!subData) {
                     alert("Subscription not found");
+                    window.location.href = '../user/dashboard.html';
                     return;
                 }
 
                 document.getElementById('planName').textContent = subData.plan_name;
                 document.getElementById('amountDisplay').textContent = subData.price || 0;
 
-                // 2. Fetch Dynamic QR pointing to upi.html
-                // Dynamically determine the base URL for the frontend
                 const targetBaseUrl = window.location.href.split('/payment/')[0] + "/frontend/upi.html";
                 const fetchUrl = `${API_URL}/payments/generate-qr?amount=${subData.price || 0}&order_id=${subId}&user_id=${user.id}&base_url=${encodeURIComponent(targetBaseUrl)}`;
-                console.log("Fetching QR from:", fetchUrl);
 
                 const qrRes = await fetch(fetchUrl);
                 const qrResData = await qrRes.json();
@@ -75,19 +91,16 @@
                 qrImg.style.display = "inline-block";
                 document.getElementById("qrLoading").style.display = "none";
                 document.getElementById("qrLink").href = qrResData.encoded_data;
-                console.log(qrResData.encoded_data);
 
-                // 3. Start Polling for Success
                 startPolling();
 
             } catch (err) {
                 console.error("Init Error:", err);
-                document.getElementById("qrLoading").textContent = "Error loading QR. Please try again.";
+                document.getElementById("qrLoading").innerHTML = `<span style="color: var(--danger)">Failed to generate QR. Please refresh.</span>`;
             }
         }
 
         function startPolling() {
-            console.log("Polling started for subscription:", subId);
             const pollInterval = setInterval(async () => {
                 try {
                     const res = await fetch(`${API_URL}/subscriptions/${subId}`);
@@ -95,16 +108,14 @@
 
                     const subData = await res.json();
                     if (subData.status === 'active') {
-                        console.log("Payment detected! Redirecting...");
                         clearInterval(pollInterval);
                         window.location.href = '../user/dashboard.html';
                     }
                 } catch (err) {
                     console.error("Polling error:", err);
                 }
-            }, 2000); // Poll every 2 seconds
+            }, 2000);
 
-            // Stop polling after 5 minutes to save resources
             setTimeout(() => clearInterval(pollInterval), 300000);
         }
 

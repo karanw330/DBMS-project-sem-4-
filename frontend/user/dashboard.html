@@ -3,7 +3,8 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>User Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard - Stellar Billing</title>
     <link rel="stylesheet" href="../style.css">
 </head>
 
@@ -12,7 +13,7 @@
         <!-- Sidebar -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <span class="sidebar-title">Billing Sys</span>
+                <span class="sidebar-title">Stellar</span>
                 <button class="sidebar-toggle" onclick="toggleSidebar()" title="Toggle Sidebar">☰</button>
             </div>
             <nav class="sidebar-nav">
@@ -25,7 +26,7 @@
                     <span class="nav-text">My Subscriptions</span>
                 </div>
             </nav>
-            <div class="sidebar-footer" style="padding: 1rem; border-top: 1px solid #34495e;">
+            <div class="sidebar-footer" style="padding: 1rem; border-top: 1px solid var(--card-border);">
                 <div class="nav-item" onclick="logout()">
                     <span class="nav-icon">🚪</span>
                     <span class="nav-text">Logout</span>
@@ -35,35 +36,40 @@
 
         <!-- Main Content -->
         <main class="main-content">
-            <header class="flex-between" style="background: none; color: #333; padding: 0 0 2rem 0;">
-                <h1 id="welcomeMsg" style="margin: 0;">User Dashboard</h1>
-                <div class="user-profile" style="display: flex; align-items: center; gap: 0.5rem;">
-                    <span id="userName" style="font-weight: bold;">User</span>
+            <header class="flex-between" style="margin-bottom: 3rem;">
+                <div>
+                    <h1 id="welcomeMsg">User Dashboard</h1>
+                    <p style="color: var(--text-secondary);">Manage your software & services subscriptions</p>
+                </div>
+                <div class="user-profile" style="display: flex; align-items: center; gap: 1rem;">
+                    <span id="userName" style="font-weight: 600;">User</span>
                     <div
-                        style="width: 40px; height: 40px; background: #3498db; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                        style="width: 44px; height: 44px; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); color: white; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-family: 'Montserrat'; box-shadow: 0 4px 12px var(--accent-glow);">
                         U</div>
                 </div>
             </header>
 
             <!-- Market Tab -->
             <div id="tab-market" class="tab-content active">
-                <div class="card">
-                    <div class="flex-between" style="margin-bottom: 1.5rem;">
-                        <h2 style="margin: 0;">Available Plans</h2>
-                        <span style="color: #666;">Explore our best offers</span>
-                    </div>
-                    <div id="availablePlans"
-                        style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1.5rem;">
-                        <!-- Plans injected here -->
-                    </div>
+                <div class="flex-between" style="margin-bottom: 2rem;">
+                    <h2 style="font-size: 1.8rem;">Available Plans</h2>
+                    <span style="color: var(--text-secondary); font-size: 0.9rem;">Explore our best offers</span>
+                </div>
+                <div id="availablePlans"
+                    style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 2rem;">
+                    <!-- Plans injected here -->
                 </div>
             </div>
 
             <!-- Subscriptions Tab -->
             <div id="tab-subs" class="tab-content">
-                <div class="card">
-                    <h2 style="margin-bottom: 1.5rem;">My Subscriptions</h2>
-                    <div id="mySubs">Loading...</div>
+                <div class="card" style="padding: 0;">
+                    <div style="padding: 2rem; border-bottom: 1px solid var(--card-border);">
+                        <h2 style="margin: 0;">My Subscriptions</h2>
+                    </div>
+                    <div id="mySubs" style="padding: 1rem;">
+                        <p style="padding: 1rem; color: var(--text-secondary);">Loading your subscriptions...</p>
+                    </div>
                 </div>
             </div>
         </main>
@@ -102,11 +108,9 @@
                 const subs = await res.json();
 
                 if (subs.length === 0) {
-                    container.innerHTML = '<p>No subscriptions yet.</p>';
+                    container.innerHTML = '<p style="padding: 1rem; color: var(--text-secondary);">No subscriptions yet.</p>';
                     return;
                 }
-
-                console.log('Fetched subscriptions:', subs);
 
                 container.innerHTML = `<table>
                     <thead>
@@ -115,31 +119,31 @@
                     <tbody>
                         ${subs.map(s => {
                     const isPending = s.status === 'pending';
-                    const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(s.plan_name || 'P')}&background=3498db&color=fff`;
+                    const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(s.plan_name || 'P')}&background=6366f1&color=fff`;
 
                     return `
                                 <tr>
                                     <td>
-                                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                        <div style="display: flex; align-items: center; gap: 1rem;">
                                             <img src="${s.image_url || fallbackUrl}" 
                                                  onerror="this.src='${fallbackUrl}'"
-                                                 style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%; border: 1px solid #eee;">
-                                            <strong>${s.plan_name || 'Plan #' + s.id}</strong>
+                                                 style="width: 48px; height: 48px; object-fit: cover; border-radius: 12px; border: 1px solid var(--card-border);">
+                                            <strong style="color: white;">${s.plan_name || 'Plan #' + s.id}</strong>
                                         </div>
                                     </td>
                                     <td><span class="status-${s.status}">${s.status.toUpperCase()}</span></td>
-                                    <td>${s.renewal_date ? s.renewal_date.split('T')[0] : '-'}</td>
+                                    <td style="color: var(--text-secondary);">${s.renewal_date ? s.renewal_date.split('T')[0] : '-'}</td>
                                     <td>
                                         ${isPending
-                            ? `<a href="../payment/checkout.html?sub_id=${s.id}"><button>Pay Now</button></a>`
-                            : '<span style="color: #999;">-</span>'}
+                            ? `<a href="../payment/checkout.html?sub_id=${s.id}"><button style="padding: 0.5rem 1rem; font-size: 0.85rem;">Pay Now</button></a>`
+                            : '<span style="color: rgba(255,255,255,0.2);">Complete</span>'}
                                     </td>
                                 </tr>`;
                 }).join('')}
                     </tbody>
                 </table>`;
             } catch (err) {
-                container.innerHTML = `<p style="color:red">Error: ${err.message}</p>`;
+                container.innerHTML = `<p style="color:var(--danger); padding: 1rem;">Error: ${err.message}</p>`;
             }
         }
 
@@ -151,18 +155,19 @@
                 const plans = await res.json();
 
                 container.innerHTML = plans.map(p => `
-                    <div style="border: 1px solid #eee; padding: 0.5rem; border-radius: 12px; text-align: center; background: #fff; transition: transform 0.2s, box-shadow 0.2s; cursor: pointer;" 
-                         onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 10px 20px rgba(0,0,0,0.05)'"
-                         onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
-                        <img src="${p.image_url || 'https://via.placeholder.com/150'}" style="width: 100%; height: 150px; object-fit: cover; border-radius: 8px; margin-bottom: 1rem;">
-                        <h3 style="margin: 0.5rem 0; color: #2c3e50;">${p.plan_name}</h3>
-                        <p style="font-size: 2rem; font-weight: bold; color: #3498db; margin: 1rem 0;">$${p.price}</p>
-                        <p style="color: #666; margin-bottom: 1.5rem;">Duration: ${p.duration_days} Days</p>
-                        <button style="width: 100%; padding: 0.8rem;" onclick="subscribe(${p.id})">Subscribe Now</button>
+                    <div class="card" style="padding: 1rem; position: relative; overflow: hidden;">
+                        <div style="position: absolute; top: -20px; right: -20px; width: 100px; height: 100px; background: var(--accent-glow); filter: blur(40px); opacity: 0.2; z-index: 0;"></div>
+                        <img src="${p.image_url || 'https://via.placeholder.com/300'}" style="width: 100%; height: 180px; object-fit: cover; border-radius: 16px; margin-bottom: 1.5rem; border: 1px solid var(--card-border); position: relative; z-index: 1;">
+                        <h3 style="margin: 0.5rem 0; color: white; position: relative; z-index: 1;">${p.plan_name}</h3>
+                        <div style="display: flex; align-items: baseline; gap: 0.25rem; margin: 1rem 0; position: relative; z-index: 1;">
+                            <span style="font-size: 2.5rem; font-weight: 800; color: var(--accent-primary);">₹${p.price}</span>
+                            <span style="color: var(--text-secondary); font-size: 0.9rem;"> / ${p.duration_days} Days</span>
+                        </div>
+                        <button style="width: 100%; margin-top: 1rem; position: relative; z-index: 1;" onclick="subscribe(${p.id})">Subscribe Now</button>
                     </div>
                 `).join('');
             } catch (err) {
-                container.innerHTML = `<p style="color:red">Error: ${err.message}</p>`;
+                container.innerHTML = `<p style="color:var(--danger)">Error: ${err.message}</p>`;
             }
         }
 

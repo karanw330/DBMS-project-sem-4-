@@ -3,8 +3,10 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Company Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company Dashboard - Stellar Billing</title>
     <link rel="stylesheet" href="../style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
@@ -12,24 +14,28 @@
         <!-- Sidebar -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <span class="sidebar-title">Billing Sys</span>
+                <span class="sidebar-title">Stellar</span>
                 <button class="sidebar-toggle" onclick="toggleSidebar()" title="Toggle Sidebar">☰</button>
             </div>
             <nav class="sidebar-nav">
-                <div class="nav-item active" id="tab-btn-plans" onclick="switchTab('plans')">
+                <div class="nav-item active" id="tab-btn-overview" onclick="switchTab('overview')">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-text">Overview</span>
+                </div>
+                <div class="nav-item" id="tab-btn-plans" onclick="switchTab('plans')">
                     <span class="nav-icon">📦</span>
                     <span class="nav-text">My Plans</span>
                 </div>
                 <div class="nav-item" id="tab-btn-subs" onclick="switchTab('subs')">
                     <span class="nav-icon">👥</span>
-                    <span class="nav-text">Recent Subscribers</span>
+                    <span class="nav-text">Subscribers</span>
                 </div>
                 <div class="nav-item" id="tab-btn-create" onclick="switchTab('create')">
                     <span class="nav-icon">➕</span>
-                    <span class="nav-text">Create New Plan</span>
+                    <span class="nav-text">Create Plan</span>
                 </div>
             </nav>
-            <div class="sidebar-footer" style="padding: 1rem; border-top: 1px solid #34495e;">
+            <div class="sidebar-footer" style="padding: 1rem; border-top: 1px solid var(--card-border);">
                 <div class="nav-item" onclick="logout()">
                     <span class="nav-icon">🚪</span>
                     <span class="nav-text">Logout</span>
@@ -39,85 +45,122 @@
 
         <!-- Main Content -->
         <main class="main-content">
-            <header class="flex-between" style="background: none; color: #333; padding: 0 0 2rem 0;">
-                <h1 id="welcomeMsg" style="margin: 0;">Company Dashboard</h1>
-                <div class="user-profile" style="display: flex; align-items: center; gap: 0.5rem;">
-                    <span id="companyName" style="font-weight: bold;">Company</span>
+            <header class="flex-between" style="margin-bottom: 3rem;">
+                <div>
+                    <h1 id="welcomeMsg">Company Dashboard</h1>
+                    <p style="color: var(--text-secondary);">Monitor your subscription growth and metrics</p>
+                </div>
+                <div class="user-profile" style="display: flex; align-items: center; gap: 1rem;">
+                    <span id="companyName" style="font-weight: 600;">Company</span>
                     <div
-                        style="width: 40px; height: 40px; background: #2c3e50; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                        style="width: 44px; height: 44px; background: #1e293b; color: white; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-family: 'Montserrat'; border: 1px solid var(--card-border);">
                         C</div>
                 </div>
             </header>
 
-            <!-- My Plans Tab -->
-            <div id="tab-plans" class="tab-content active">
+            <!-- Overview Tab -->
+            <div id="tab-overview" class="tab-content active">
+                <div
+                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                    <div class="card" style="padding: 1.5rem; margin-bottom: 0;">
+                        <p style="color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase;">Total
+                            Revenue</p>
+                        <h3 id="stat-revenue" style="font-size: 2rem; margin-top: 0.5rem; color: var(--success);">₹0.00
+                        </h3>
+                    </div>
+                    <div class="card" style="padding: 1.5rem; margin-bottom: 0;">
+                        <p style="color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase;">Total
+                            Subs</p>
+                        <h3 id="stat-subs" style="font-size: 2rem; margin-top: 0.5rem; color: var(--accent-primary);">0
+                        </h3>
+                    </div>
+                    <div class="card" style="padding: 1.5rem; margin-bottom: 0;">
+                        <p style="color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase;">Active
+                            Plans</p>
+                        <h3 id="stat-plans" style="font-size: 2rem; margin-top: 0.5rem;">0</h3>
+                    </div>
+                </div>
                 <div class="card">
-                    <h2 style="margin-bottom: 1.5rem;">My Plans</h2>
-                    <table id="plansTable">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Plan Image</th>
-                                <th>Plan Name</th>
-                                <th>Price</th>
-                                <th>Duration</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
+                    <h2 style="margin-bottom: 1.5rem;">Growth Analytics</h2>
+                    <div style="height: 300px; width: 100%;">
+                        <canvas id="growthChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- My Plans Tab -->
+            <div id="tab-plans" class="tab-content">
+                <div class="card" style="padding: 0;">
+                    <div
+                        style="padding: 2rem; border-bottom: 1px solid var(--card-border); display: flex; justify-content: space-between; align-items: center;">
+                        <h2 style="margin: 0;">My Plans</h2>
+                        <button onclick="switchTab('create')" style="padding: 0.6rem 1rem; font-size: 0.9rem;">+ New
+                            Plan</button>
+                    </div>
+                    <div style="padding: 1rem;">
+                        <table id="plansTable">
+                            <thead>
+                                <tr>
+                                    <th>Plan</th>
+                                    <th>Price</th>
+                                    <th>Duration</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
             <!-- Recent Subscribers Tab -->
             <div id="tab-subs" class="tab-content">
-                <div class="card">
-                    <h2 style="margin-bottom: 1.5rem;">Recent Subscribers</h2>
-                    <table id="subsTable">
-                        <thead>
-                            <tr>
-                                <th>Sub ID</th>
-                                <th>User ID</th>
-                                <th>Plan Name</th>
-                                <th>Status</th>
-                                <th>Renewal Date</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
+                <div class="card" style="padding: 0;">
+                    <div style="padding: 2rem; border-bottom: 1px solid var(--card-border);">
+                        <h2 style="margin: 0;">Recent Subscribers</h2>
+                    </div>
+                    <div style="padding: 1rem;">
+                        <table id="subsTable">
+                            <thead>
+                                <tr>
+                                    <th>Sub ID</th>
+                                    <th>User</th>
+                                    <th>Plan</th>
+                                    <th>Status</th>
+                                    <th>Renewal</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
             <!-- Create New Plan Tab -->
             <div id="tab-create" class="tab-content">
-                <div class="card" style="max-width: 600px;">
-                    <h2 style="margin-bottom: 1.5rem;">Create New Plan</h2>
+                <div class="card" style="max-width: 700px; margin: 0 auto;">
+                    <h2 style="margin-bottom: 2rem;">Create New Plan</h2>
                     <form id="createPlanForm">
-                        <div style="display: flex; flex-direction: column; gap: 1rem;">
-                            <div>
-                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Plan
-                                    Name</label>
-                                <input type="text" id="planName" required placeholder="e.g. Pro Monthly">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                            <div style="grid-column: span 2;">
+                                <label>Plan Name</label>
+                                <input type="text" id="planName" required placeholder="e.g. Premium Enterprise">
                             </div>
-                            <div style="display: flex; gap: 1rem;">
-                                <div style="flex: 2;">
-                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Image
-                                        URL</label>
-                                    <input type="url" id="image_url" placeholder="https://example.com/image.png">
-                                </div>
-                                <div style="flex: 1;">
-                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Duration
-                                        (Days)</label>
-                                    <input type="number" id="duration" value="30" required>
-                                </div>
+                            <div style="grid-column: span 2;">
+                                <label>Image URL</label>
+                                <input type="url" id="image_url" placeholder="https://images.unsplash.com/...">
                             </div>
                             <div>
-                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Price
-                                    ($)</label>
-                                <input type="number" step="0.01" id="price" required placeholder="19.99">
+                                <label>Duration (Days)</label>
+                                <input type="number" id="duration" value="30" required>
                             </div>
-                            <button type="submit" style="padding: 0.8rem; margin-top: 1rem;">Create Plan</button>
+                            <div>
+                                <label>Price (₹)</label>
+                                <input type="number" step="0.01" id="price" required placeholder="49.99">
+                            </div>
                         </div>
+                        <button type="submit" style="width: 100%; margin-top: 2rem; padding: 1rem 0;">Create Stellar
+                            Plan</button>
                     </form>
                 </div>
             </div>
@@ -129,48 +172,50 @@
         requireAuth('company');
         const user = getUser();
         document.getElementById('companyName').textContent = user.name;
-        document.getElementById('welcomeMsg').textContent = `Welcome back, ${user.name.split(' ')[0]}!`;
+        document.getElementById('welcomeMsg').textContent = `Welcome back, ${user.name.split(' ')[0]}`;
+
+        let growthChart = null;
 
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('retracted');
         }
 
         function switchTab(tabId) {
-            // Update Tab Content
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
             document.getElementById('tab-' + tabId).classList.add('active');
 
-            // Update Nav Items
             document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
             document.getElementById('tab-btn-' + tabId).classList.add('active');
 
-            // Load data if needed
+            if (tabId === 'overview') updateOverview();
             if (tabId === 'plans') loadPlans();
             if (tabId === 'subs') loadSubscribersData();
         }
 
-        // Load Plans
         async function loadPlans() {
             try {
                 const res = await fetch(`${API_URL}/plans/?company_id=${user.id}`);
-                if (!res.ok) throw new Error(`Failed to fetch plans (${res.status})`);
+                if (!res.ok) throw new Error(`Failed to fetch plans`);
                 const plans = await res.json();
 
                 const tbody = document.querySelector('#plansTable tbody');
                 tbody.innerHTML = plans.map(p => `
                     <tr>
-                        <td>#${p.id}</td>
-                        <td><img src="${p.image_url || 'https://via.placeholder.com/50'}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;"></td>
-                        <td><strong>${p.plan_name}</strong></td>
-                        <td style="color: #3498db; font-weight: bold;">$${p.price}</td>
-                        <td>${p.duration_days} Days</td>
-                        <td><span class="status-active">ACTIVE</span></td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <img src="${p.image_url || 'https://via.placeholder.com/50'}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 8px; border: 1px solid var(--card-border);">
+                                <strong style="color: white;">${p.plan_name}</strong>
+                            </div>
+                        </td>
+                        <td style="color: var(--accent-primary); font-weight: 700;">₹${p.price}</td>
+                        <td style="color: var(--text-secondary);">${p.duration_days} Days</td>
+                        <td><span class="status-active">Active</span></td>
                     </tr>
                 `).join('');
                 return plans;
             } catch (err) {
                 console.error(err);
-                document.querySelector('#plansTable tbody').innerHTML = `<tr><td colspan="5" style="color:red">Error loading plans: ${err.message}</td></tr>`;
+                document.querySelector('#plansTable tbody').innerHTML = `<tr><td colspan="4" style="color:var(--danger)">Error: ${err.message}</td></tr>`;
             }
         }
 
@@ -179,37 +224,110 @@
             if (plans) loadSubscribers(plans);
         }
 
-        // Load Subscribers (For all company plans)
         async function loadSubscribers(plans) {
             const tbody = document.querySelector('#subsTable tbody');
             tbody.innerHTML = '';
+            let allSubs = [];
 
             for (const plan of plans) {
                 try {
                     const res = await fetch(`${API_URL}/subscriptions/?plan_id=${plan.id}`);
-                    if (!res.ok) throw new Error(`Failed to fetch subs for plan ${plan.id}`);
+                    if (!res.ok) continue;
                     const subs = await res.json();
 
                     subs.forEach(s => {
+                        allSubs.push(s);
                         const row = `
                             <tr>
-                                <td>#${s.id}</td>
-                                <td>User #${s.user_id}</td>
-                                <td><strong>${plan.plan_name}</strong></td>
+                                <td style="color: var(--text-secondary); font-family: monospace;">#${s.id.toString().slice(-6)}</td>
+                                <td style="color: white; font-weight: 500;">User #${s.user_id}</td>
+                                <td><span style="color: var(--accent-secondary); font-weight: 600;">${plan.plan_name}</span></td>
                                 <td><span class="status-${s.status}">${s.status.toUpperCase()}</span></td>
-                                <td>${s.renewal_date ? s.renewal_date.split('T')[0] : 'N/A'}</td>
+                                <td style="color: var(--text-secondary);">${s.renewal_date ? s.renewal_date.split('T')[0] : 'N/A'}</td>
                             </tr>
                         `;
                         tbody.insertAdjacentHTML('beforeend', row);
                     });
-                } catch (err) {
-                    console.error(err);
-                    tbody.insertAdjacentHTML('beforeend', `<tr><td colspan="5" style="color:red">Error loading subs: ${err.message}</td></tr>`);
-                }
+                } catch (err) { console.error(err); }
             }
+            return allSubs;
         }
 
-        // Create Plan
+        async function updateOverview() {
+            const plans = await loadPlans() || [];
+            document.getElementById('stat-plans').textContent = plans.length;
+
+            const tbody = document.querySelector('#subsTable tbody');
+            tbody.innerHTML = '';
+            let totalRevenue = 0;
+            let totalSubs = 0;
+            let dailyData = {};
+
+            const now = new Date();
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date(now);
+                d.setDate(d.getDate() - i);
+                dailyData[d.toISOString().split('T')[0]] = 0;
+            }
+
+            for (const plan of plans) {
+                const res = await fetch(`${API_URL}/subscriptions/?plan_id=${plan.id}`);
+                if (!res.ok) continue;
+                const subs = await res.json();
+
+                subs.forEach(s => {
+                    totalSubs++;
+                    if (s.status === 'paid') {
+                        totalRevenue += plan.price;
+                        const date = s.renewal_date ? s.renewal_date.split('T')[0] : null;
+                        if (dailyData[date] !== undefined) dailyData[date]++;
+                    }
+                });
+            }
+
+            document.getElementById('stat-revenue').textContent = `₹${totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+            document.getElementById('stat-subs').textContent = totalSubs;
+
+            initChart(dailyData);
+        }
+
+        function initChart(data) {
+            const ctx = document.getElementById('growthChart').getContext('2d');
+            if (growthChart) growthChart.destroy();
+
+            growthChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Object.keys(data).map(d => d.split('-').slice(1).join('/')),
+                    datasets: [{
+                        label: 'Subscriptions',
+                        data: Object.values(data),
+                        borderColor: '#6366f1',
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 3,
+                        pointBackgroundColor: '#6366f1'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: '#b0b3b8', stepSize: 1 }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#b0b3b8' }
+                        }
+                    }
+                }
+            });
+        }
+
         document.getElementById('createPlanForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const plan_name = document.getElementById('planName').value;
@@ -221,26 +339,21 @@
                 const res = await fetch(`${API_URL}/plans/`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        company_id: user.id,
-                        plan_name, price, duration_days, image_url
-                    })
+                    body: JSON.stringify({ company_id: user.id, plan_name, price, duration_days, image_url })
                 });
 
                 if (res.ok) {
-                    alert('Plan created successfully!');
+                    alert('Stellar plan created successfully!');
                     document.getElementById('createPlanForm').reset();
-                    switchTab('plans'); // Go back to plans list
+                    switchTab('plans');
                 } else {
                     alert('Failed to create plan');
                 }
-            } catch (err) {
-                alert(err.message);
-            }
+            } catch (err) { alert(err.message); }
         });
 
         // Initial Load
-        loadPlans();
+        updateOverview();
     </script>
 </body>
 
