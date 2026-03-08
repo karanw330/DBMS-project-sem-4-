@@ -1,4 +1,4 @@
-const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+window.API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? "http://localhost:8000/api"
     : "https://dbms-project-sem-4.onrender.com/api";
 
@@ -16,12 +16,12 @@ function requireAuth(role) {
     }
     if (role && user.role !== role) {
         alert("Unauthorized access");
-        window.location.href = "/frontend/auth/index.html"; // Redirect to login instead of root
+        window.location.href = "/frontend/index.html";
         return;
     }
 }
 
 function logout() {
     localStorage.removeItem("user");
-    window.location.href = "/frontend/auth/index.html";
+    window.location.href = "/frontend/index.html";
 }
