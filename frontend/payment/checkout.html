@@ -62,7 +62,8 @@
                 document.getElementById('amountDisplay').textContent = subData.price || 0;
 
                 // 2. Fetch Dynamic QR pointing to index.html
-                const targetBaseUrl = "http://127.0.0.1:3000/frontend";
+                // Dynamically determine the base URL for the frontend
+                const targetBaseUrl = window.location.href.split('/payment/')[0] + "/frontend";
                 const fetchUrl = `${API_URL}/payments/generate-qr?amount=${subData.price || 0}&order_id=${subId}&user_id=${user.id}&base_url=${encodeURIComponent(targetBaseUrl)}`;
                 console.log("Fetching QR from:", fetchUrl);
 
