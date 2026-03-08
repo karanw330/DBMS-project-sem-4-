@@ -11,22 +11,27 @@
 
     <div class="card" style="width: 400px; text-align: center;">
         <h2>Secure Checkout</h2>
-        <p>Completing payment for Subscription #<span id="subId"></span></p>
+        <p>Scan the QR code to complete payment for:</p>
+        <h3 id="planName" style="color: #2c3e50;">...</h3>
+        <p style="color: #666; font-size: 0.8rem;">Subscription #<span id="subIdText"></span></p>
 
-        <div style="margin: 2rem 0; font-size: 2rem; font-weight: bold; color: #2c3e50;">
-            <img id="qr">
-            $9.99
+        <div style="margin: 2rem 0;">
+            <div id="qrLoading" style="margin-bottom: 1rem; color: #666;">Generating QR Code...</div>
+            <a id="qrLink" href="#">
+                <img id="qr"
+                    style="width: 250px; height: 250px; border: 1px solid #eee; border-radius: 12px; padding: 10px; display: none;">
+            </a>
+            <div style="font-size: 1.5rem; font-weight: bold; color: #3498db; margin-top: 1rem;">
+                ₹<span id="amountDisplay">...</span>
+            </div>
         </div>
-        <p style="color:#666; font-size:0.9rem;">(Simulated Price display)</p>
 
-        <button id="payButton" style="width: 100%; font-size: 1.2rem; padding: 1rem; background-color: #27ae60;">
-            PAY NOW
-        </button>
+        <p style="color: #999; font-size: 0.9rem; margin-bottom: 2rem;">
+            This QR code will redirect you to the mobile payment page.
+        </p>
 
-        <div id="message" style="margin-top: 1rem; display: none;"></div>
-
-        <br><br>
-        <a href="../user/dashboard.html">Cancel / Return to Dashboard</a>
+        <a href="../user/dashboard.html" style="color: #e74c3c; text-decoration: none; font-weight: 600;">Cancel /
+            Return to Dashboard</a>
     </div>
 
     <script src="../config.js"></script>
@@ -35,50 +40,74 @@
 
         const urlParams = new URLSearchParams(window.location.search);
         const subId = urlParams.get('sub_id');
-        document.getElementById('subId').textContent = subId;
+        const user = getUser();
 
-        document.getElementById('payButton').addEventListener('click', async () => {
-            const btn = document.getElementById('payButton');
-            btn.disabled = true;
-            btn.textContent = "Processing...";
+        document.getElementById('subIdText').textContent = subId;
+
+        async function initCheckout() {
+            if (!subId || !user) return;
 
             try {
-                const res = await fetch(`${API_URL}/payments/`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        subscription_id: parseInt(subId),
-                        amount: 9.99 // Simulating fixed amount for now
-                    })
-                });
+                // 1. Fetch Subscription Details
+                const res = await fetch(`${API_URL}/subscriptions/?user_id=${user.id}`);
+                const subs = await res.json();
+                const subData = subs.find(s => s.id == subId);
 
-                if (res.ok) {
-                    const msg = document.getElementById('message');
-                    msg.style.display = 'block';
-                    msg.style.color = 'green';
-                    msg.innerHTML = '<strong>Payment Successful!</strong><br>Redirecting to dashboard...';
-
-                    setTimeout(() => {
-                        window.location.href = '../user/dashboard.html';
-                    }, 2000);
-                } else {
-                    throw new Error("Payment Failed");
+                if (!subData) {
+                    alert("Subscription not found");
+                    return;
                 }
+
+                document.getElementById('planName').textContent = subData.plan_name;
+                document.getElementById('amountDisplay').textContent = subData.price || 0;
+
+                // 2. Fetch Dynamic QR pointing to index.html
+                const targetBaseUrl = "http://127.0.0.1:3000/frontend";
+                const fetchUrl = `${API_URL}/payments/generate-qr?amount=${subData.price || 0}&order_id=${subId}&user_id=${user.id}&base_url=${encodeURIComponent(targetBaseUrl)}`;
+                console.log("Fetching QR from:", fetchUrl);
+
+                const qrRes = await fetch(fetchUrl);
+                const qrResData = await qrRes.json();
+
+                const qrImg = document.getElementById("qr");
+                qrImg.src = "data:image/png;base64," + qrResData.qr_base64;
+                qrImg.style.display = "inline-block";
+                document.getElementById("qrLoading").style.display = "none";
+                document.getElementById("qrLink").href = qrResData.encoded_data;
+                console.log(qrResData.encoded_data);
+
+                // 3. Start Polling for Success
+                startPolling();
+
             } catch (err) {
-                alert(err.message);
-                btn.disabled = false;
-                btn.textContent = "PAY NOW";
+                console.error("Init Error:", err);
+                document.getElementById("qrLoading").textContent = "Error loading QR. Please try again.";
             }
-        });
-    </script>
-    <script>
-        fetch(`${API_URL}/payments/generate-qr`)
-            .then(res => res.json())
-            .then(data => {
-                document.getElementById("qr").src =
-                    "data:image/png;base64," + data.qr_base64;
-                console.log(data);
-            });
+        }
+
+        function startPolling() {
+            console.log("Polling started for subscription:", subId);
+            const pollInterval = setInterval(async () => {
+                try {
+                    const res = await fetch(`${API_URL}/subscriptions/${subId}`);
+                    if (!res.ok) return;
+
+                    const subData = await res.json();
+                    if (subData.status === 'active') {
+                        console.log("Payment detected! Redirecting...");
+                        clearInterval(pollInterval);
+                        window.location.href = '../user/dashboard.html';
+                    }
+                } catch (err) {
+                    console.error("Polling error:", err);
+                }
+            }, 2000); // Poll every 2 seconds
+
+            // Stop polling after 5 minutes to save resources
+            setTimeout(() => clearInterval(pollInterval), 300000);
+        }
+
+        initCheckout();
     </script>
 </body>
 

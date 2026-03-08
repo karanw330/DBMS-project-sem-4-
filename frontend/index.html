@@ -889,48 +889,130 @@
         </div>
     </div>
 
+    <script src="config.js"></script>
     <script>
+        // Enforce Authentication
+        requireAuth('user');
+
+        // Parse URL Parameters
+        const params = new URLSearchParams(window.location.search);
+        const subId = params.get('sub_id');
+        const user = getUser();
+
+        let subData = null;
         let pinValue = '';
         let showPin = false;
 
-        function processPayment() {
-            // Show PIN modal
-            const pinModal = document.getElementById('pinModal');
-            pinModal.classList.add('show');
+        // Initial Load
+        async function initCheckout() {
+            if (!subId) {
+                alert("Missing subscription ID");
+                window.location.href = "/user/dashboard.html";
+                return;
+            }
 
-            // Focus on hidden input to trigger mobile keyboard
-            setTimeout(() => {
-                document.getElementById('pinInput').focus();
-            }, 300);
+            if (!user) return; // Should be handled by requireAuth
+
+            try {
+                // Fetch Subscription Details
+                const res = await fetch(`${API_URL}/subscriptions/?user_id=${user.id}`);
+                const subs = await res.json();
+                subData = subs.find(s => s.id == subId);
+
+                if (!subData) {
+                    alert("Subscription not found");
+                    window.location.href = "/user/dashboard.html";
+                    return;
+                }
+
+                // Update UI
+                const price = subData.price || 0;
+                document.querySelector('.amount').textContent = `₹${price}`;
+                document.querySelector('.pay-button').textContent = `Pay ₹${price}`;
+                document.querySelector('.merchant-name').textContent = `Paying ${subData.plan_name || 'Service'}`;
+                document.querySelector('.order-id').textContent = `Order Id #${subId}`;
+                document.querySelector('.success-title').textContent = `Payment of ₹${price} successful!`;
+
+                // Fetch QR for verification if needed (background)
+                const qrRes = await fetch(`${API_URL}/payments/generate-qr?amount=${price}&order_id=${subId}&user_id=${user.id}`);
+                if (!qrRes.ok) throw new Error(`QR generation failed: ${qrRes.status}`);
+
+                const qrData = await qrRes.json();
+                console.log("QR Data (internal):", qrData);
+
+                // Keep the original logo (SVG) as requested
+                // (Removed the code that replaced logoContainer.innerHTML)
+
+            } catch (err) {
+                console.error("Init Error:", err);
+                alert("Error initializing checkout: " + err.message);
+            }
         }
 
-        // Handle PIN input
+        initCheckout();
+
+        function processPayment() {
+            const pinModal = document.getElementById('pinModal');
+            pinModal.classList.add('show');
+            setTimeout(() => { document.getElementById('pinInput').focus(); }, 300);
+        }
+
         document.getElementById('pinInput').addEventListener('input', (e) => {
             pinValue = e.target.value;
             updatePinDots();
-
-            // Auto-submit when 4 digits entered
             if (pinValue.length === 4) {
-                setTimeout(() => {
-                    submitPin();
-                }, 300);
+                setTimeout(() => { submitPin(); }, 300);
             }
         });
+
+        async function submitPin() {
+            const pinModal = document.getElementById('pinModal');
+
+            try {
+                const res = await fetch(`${API_URL}/payments/upi-payment`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: user.id,
+                        subscription_id: parseInt(subId),
+                        pin: pinValue
+                    })
+                });
+
+                if (res.ok) {
+                    // Update UI for success
+                    document.getElementById('pinModal').classList.remove('show');
+                    document.getElementById('successScreen').classList.add('show');
+
+                    // Specific message for polling flow
+                    document.querySelector('.success-title').textContent = "Payment Successful!";
+                    document.querySelector('.success-message').innerHTML = `
+                        Your subscription is now active.<br>
+                        <strong>You can close this tab/window.</strong><br>
+                        The checkout page on your other device will update automatically.
+                    `;
+                } else {
+                    const error = await res.json();
+                    alert(error.detail || "Payment failed");
+                    pinValue = '';
+                    document.getElementById('pinInput').value = '';
+                    updatePinDots();
+                }
+            } catch (err) {
+                alert("Network error: " + err.message);
+            }
+        }
 
         function updatePinDots() {
             for (let i = 1; i <= 4; i++) {
                 const dot = document.getElementById(`dot${i}`);
                 if (i <= pinValue.length) {
                     dot.classList.add('filled');
-
-                    // Show actual number if showPin is true
                     if (showPin && pinValue[i - 1]) {
                         dot.textContent = pinValue[i - 1];
                         dot.style.display = 'flex';
                         dot.style.alignItems = 'center';
                         dot.style.justifyContent = 'center';
-                        dot.style.fontSize = '14px';
-                        dot.style.fontWeight = 'bold';
                         dot.style.color = 'white';
                         dot.style.background = '#333';
                     } else {
@@ -947,55 +1029,12 @@
 
         function togglePinVisibility() {
             showPin = !showPin;
-            const showPinText = document.getElementById('showPinText');
-            showPinText.textContent = showPin ? 'HIDE' : 'SHOW';
+            document.getElementById('showPinText').textContent = showPin ? 'HIDE' : 'SHOW';
             updatePinDots();
         }
 
-        function submitPin() {
-            // Hide PIN modal
-            const pinModal = document.getElementById('pinModal');
-            pinModal.classList.remove('show');
-
-            // Show success screen after a brief delay
-            setTimeout(() => {
-                const successScreen = document.getElementById('successScreen');
-                successScreen.classList.add('show');
-
-                // Reset PIN input
-                pinValue = '';
-                document.getElementById('pinInput').value = '';
-                updatePinDots();
-
-                // Optional: Auto-close success screen after some time
-                // setTimeout(() => {
-                //     successScreen.classList.remove('show');
-                // }, 5000);
-            }, 200);
-        }
-
-        // Close button functionality
         document.querySelector('.close-btn').addEventListener('click', () => {
-            if (confirm('Are you sure you want to cancel this payment?')) {
-                // Reset everything
-                document.getElementById('pinModal').classList.remove('show');
-                document.getElementById('successScreen').classList.remove('show');
-            }
-        });
-
-        // Close modal when clicking outside
-        document.getElementById('pinModal').addEventListener('click', (e) => {
-            if (e.target.id === 'pinModal') {
-                document.getElementById('pinModal').classList.remove('show');
-                pinValue = '';
-                document.getElementById('pinInput').value = '';
-                updatePinDots();
-            }
-        });
-
-        // Close success screen when clicked
-        document.getElementById('successScreen').addEventListener('click', () => {
-            document.getElementById('successScreen').classList.remove('show');
+            if (confirm('Cancel payment?')) window.history.back();
         });
     </script>
 </body>

@@ -11,17 +11,17 @@ function getUser() {
 function requireAuth(role) {
     const user = getUser();
     if (!user) {
-        window.location.href = "../auth/index.html";
+        window.location.href = "/frontend/auth/index.html";
         return;
     }
     if (role && user.role !== role) {
         alert("Unauthorized access");
-        window.location.href = "../auth/index.html"; // Redirect to login instead of root
+        window.location.href = "/frontend/auth/index.html"; // Redirect to login instead of root
         return;
     }
 }
 
 function logout() {
     localStorage.removeItem("user");
-    window.location.href = "../auth/index.html";
+    window.location.href = "/frontend/auth/index.html";
 }

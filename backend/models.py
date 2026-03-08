@@ -41,6 +41,7 @@ class SubscriptionOut(BaseModel):
     plan_id: int
     plan_name: Optional[str] = None
     image_url: Optional[str] = None
+    price: Optional[float] = None
     status: str
     start_date: Optional[str]
     renewal_date: Optional[str]
@@ -56,4 +57,5 @@ class PaymentOut(PaymentCreate):
 
 class UPIPaymentRequest(BaseModel):
     user_id: int
+    subscription_id: int
     pin: str
