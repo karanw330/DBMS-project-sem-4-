@@ -1,6 +1,6 @@
 const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? "http://localhost:8000/api"
-    : "https://your-backend-url.onrender.com/api"; // CHANGE THIS to your actual backend URL
+    : "https://dbms-project-sem-4.onrender.com/api";
 
 
 function getUser() {
