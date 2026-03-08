@@ -30,7 +30,7 @@
         </div>
     </div>
 
-    <script src="../config.js"></script>
+    <script src="./config.js"></script>
     <script>
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -50,9 +50,9 @@
                 localStorage.setItem('user', JSON.stringify(user));
 
                 if (user.role === 'company') {
-                    window.location.href = '../company/dashboard.html';
+                    window.location.href = 'company/dashboard.html';
                 } else {
-                    window.location.href = '../user/dashboard.html';
+                    window.location.href = 'user/dashboard.html';
                 }
             } catch (err) {
                 alert(err.message);
