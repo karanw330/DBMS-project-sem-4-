@@ -44,7 +44,7 @@ def generate_qr(amount: float, order_id: int, user_id: int, base_url: str = None
     
     # data = "https://dbms-project-sem-4.vercel.app/"
 
-    data = f"https://dbms-project-sem-4.vercel.app/frontend/payment/upi.html?sub_id={order_id}"
+    data = f"https://dbms-project-sem-4.vercel.app/payment/upi.html?sub_id={order_id}"
     
     # # If base_url is provided, create a link to index.html for checkout
     # if base_url:
