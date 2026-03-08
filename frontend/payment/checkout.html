@@ -61,9 +61,9 @@
                 document.getElementById('planName').textContent = subData.plan_name;
                 document.getElementById('amountDisplay').textContent = subData.price || 0;
 
-                // 2. Fetch Dynamic QR pointing to index.html
+                // 2. Fetch Dynamic QR pointing to upi.html
                 // Dynamically determine the base URL for the frontend
-                const targetBaseUrl = window.location.href.split('/payment/')[0] + "/frontend";
+                const targetBaseUrl = window.location.href.split('/payment/')[0] + "/frontend/upi.html";
                 const fetchUrl = `${API_URL}/payments/generate-qr?amount=${subData.price || 0}&order_id=${subId}&user_id=${user.id}&base_url=${encodeURIComponent(targetBaseUrl)}`;
                 console.log("Fetching QR from:", fetchUrl);
 
