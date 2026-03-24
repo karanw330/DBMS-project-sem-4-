@@ -277,7 +277,7 @@
 
                 subs.forEach(s => {
                     totalSubs++;
-                    if (s.status === 'paid') {
+                    if (s.status === 'active') {
                         totalRevenue += plan.price;
                         const date = s.renewal_date ? s.renewal_date.split('T')[0] : null;
                         if (dailyData[date] !== undefined) dailyData[date]++;

@@ -18,10 +18,13 @@ def register(user_in: UserRegister):
         if u["email"] == user_in.email:
              raise HTTPException(status_code=400, detail="Email already registered")
     
-    global user_id_counter
-    # Need to access the global counter from data.py, but it's an integer so we can't modify it directly via import easily unless we mutated a mutable object or used a class. 
-    # For simplicity in this script-like setup, we'll re-implement the counter increment or just import the module differently.
-    # Actually, importing 'backend.data' gives us the module.
+    # Validate UPI PIN for users
+    if user_in.role == "user":
+        if user_in.upi_pin is None:
+            raise HTTPException(status_code=400, detail="UPI PIN is required for user accounts")
+        if not (0 <= user_in.upi_pin <= 9999):
+            raise HTTPException(status_code=400, detail="UPI PIN must be a 4-digit number (0000-9999)")
+    
     import backend.data as db
     
     new_user = {
@@ -31,6 +34,11 @@ def register(user_in: UserRegister):
         "password": user_in.password,
         "role": user_in.role
     }
+    
+    # Store UPI PIN only for user accounts
+    if user_in.role == "user":
+        new_user["upi"] = user_in.upi_pin
+    
     db.users.append(new_user)
     db.user_id_counter += 1
     

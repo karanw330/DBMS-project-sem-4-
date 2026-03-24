@@ -53,6 +53,11 @@
                                 <option value="company" style="background: var(--bg-color);">Company / Merchant</option>
                             </select>
                         </div>
+                        <div style="grid-column: span 2;" id="upiPinGroup">
+                            <label>UPI PIN <span style="color: var(--text-secondary); font-size: 0.85rem;">(4-digit numeric PIN for payments)</span></label>
+                            <input type="password" id="upiPin" maxlength="4" pattern="[0-9]{4}" inputmode="numeric" placeholder="••••"
+                                style="letter-spacing: 0.5rem; text-align: center; font-size: 1.3rem;">
+                        </div>
                     </div>
 
                     <button type="submit" style="width: 100%; height: 56px; font-size: 1.1rem; margin-top: 1rem;">
@@ -69,6 +74,24 @@
 
     <script src="../config.js"></script>
     <script>
+        // Toggle UPI PIN field based on role
+        const roleSelect = document.getElementById('role');
+        const upiPinGroup = document.getElementById('upiPinGroup');
+        const upiPinInput = document.getElementById('upiPin');
+
+        function toggleUpiField() {
+            if (roleSelect.value === 'user') {
+                upiPinGroup.style.display = 'block';
+                upiPinInput.required = true;
+            } else {
+                upiPinGroup.style.display = 'none';
+                upiPinInput.required = false;
+                upiPinInput.value = '';
+            }
+        }
+        roleSelect.addEventListener('change', toggleUpiField);
+        toggleUpiField(); // initial state
+
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const name = document.getElementById('name').value;
@@ -76,11 +99,23 @@
             const password = document.getElementById('password').value;
             const role = document.getElementById('role').value;
 
+            const body = { name, email, password, role };
+
+            // Add UPI PIN for user accounts
+            if (role === 'user') {
+                const pin = document.getElementById('upiPin').value;
+                if (!/^[0-9]{4}$/.test(pin)) {
+                    alert('Please enter a valid 4-digit UPI PIN');
+                    return;
+                }
+                body.upi_pin = parseInt(pin, 10);
+            }
+
             try {
                 const res = await fetch(`${API_URL}/auth/register`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, email, password, role })
+                    body: JSON.stringify(body)
                 });
 
                 if (!res.ok) {

@@ -32,7 +32,7 @@ def seed_data():
         "name": "Alice Johnson",
         "email": "alice@example.com",
         "password": "password123",
-        "upi": "0000",
+        "upi": 0,
         "role": "user"
     })
     user_id_counter += 1
@@ -42,7 +42,7 @@ def seed_data():
         "name": "Bob Smith",
         "email": "bob@example.com",
         "password": "password123",
-        "upi": "0001",
+        "upi": 1,
         "role": "user"
     })
     user_id_counter += 1

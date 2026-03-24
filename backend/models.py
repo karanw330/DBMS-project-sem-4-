@@ -13,6 +13,7 @@ class UserRegister(UserBase):
     name: str
     password: str
     role: Literal["user", "company"]
+    upi_pin: Optional[int] = None  # Required for role='user', validated in auth.py
 
 class UserOut(UserBase):
     id: int
@@ -58,4 +59,4 @@ class PaymentOut(PaymentCreate):
 class UPIPaymentRequest(BaseModel):
     user_id: int
     subscription_id: int
-    pin: str
+    pin: int
