@@ -147,6 +147,11 @@
                                 <input type="text" id="planName" required placeholder="e.g. Premium Enterprise">
                             </div>
                             <div style="grid-column: span 2;">
+                                <label>Description</label>
+                                <textarea id="description" required placeholder="Describe what's included in this plan..." 
+                                    style="background: rgba(255, 255, 255, 0.05); border: 1px solid var(--card-border); border-radius: 12px; padding: 0.8rem 1rem; color: white; width: 100%; min-height: 100px; font-family: inherit; font-size: 1rem;"></textarea>
+                            </div>
+                            <div style="grid-column: span 2;">
                                 <label>Image URL</label>
                                 <input type="url" id="image_url" placeholder="https://images.unsplash.com/...">
                             </div>
@@ -243,7 +248,7 @@
                                 <td style="color: white; font-weight: 500;">User #${s.user_id}</td>
                                 <td><span style="color: var(--accent-secondary); font-weight: 600;">${plan.plan_name}</span></td>
                                 <td><span class="status-${s.status}">${s.status.toUpperCase()}</span></td>
-                                <td style="color: var(--text-secondary);">${s.renewal_date ? s.renewal_date.split('T')[0] : 'N/A'}</td>
+                                <td style="color: var(--text-secondary);">${s.end_date ? s.end_date.split('T')[0] : 'N/A'}</td>
                             </tr>
                         `;
                         tbody.insertAdjacentHTML('beforeend', row);
@@ -279,7 +284,7 @@
                     totalSubs++;
                     if (s.status === 'active') {
                         totalRevenue += plan.price;
-                        const date = s.renewal_date ? s.renewal_date.split('T')[0] : null;
+                        const date = s.end_date ? s.end_date.split('T')[0] : null;
                         if (dailyData[date] !== undefined) dailyData[date]++;
                     }
                 });
@@ -331,6 +336,7 @@
         document.getElementById('createPlanForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const plan_name = document.getElementById('planName').value;
+            const description = document.getElementById('description').value;
             const price = parseFloat(document.getElementById('price').value);
             const duration_days = parseInt(document.getElementById('duration').value);
             const image_url = document.getElementById('image_url').value;
@@ -339,7 +345,7 @@
                 const res = await fetch(`${API_URL}/plans/`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ company_id: user.id, plan_name, price, duration_days, image_url })
+                    body: JSON.stringify({ company_id: user.id, plan_name, description, price, duration_days, image_url })
                 });
 
                 if (res.ok) {

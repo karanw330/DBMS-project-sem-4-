@@ -46,6 +46,10 @@
                             <input type="password" id="password" required placeholder="••••••••">
                         </div>
                         <div style="grid-column: span 2;">
+                            <label>Phone Number</label>
+                            <input type="tel" id="phoneNumber" required placeholder="+91 98765-43210">
+                        </div>
+                        <div style="grid-column: span 2;">
                             <label>Account Type</label>
                             <select id="role"
                                 style="background: rgba(255, 255, 255, 0.05); border: 1px solid var(--card-border); border-radius: 12px; padding: 0.8rem 1rem; color: white; width: 100%; margin-bottom: 1rem;">
@@ -100,8 +104,9 @@
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const role = document.getElementById('role').value;
+            const phone_number = document.getElementById('phoneNumber').value;
 
-            const body = { name, email, password, role };
+            const body = { name, email, password, role, phone_number };
 
             // Add UPI PIN for user accounts
             if (role === 'user') {

@@ -1,84 +1,93 @@
 from fastapi import APIRouter, HTTPException
 from typing import List
 from backend.models import SubscriptionCreate, SubscriptionOut
-import backend.data as db
+from backend.database import get_db_connection
 
 router = APIRouter()
 
 @router.post("/", response_model=SubscriptionOut)
 def create_subscription(sub_in: SubscriptionCreate):
-    # Basic check if user and plan exist
-    user_exists = any(u["id"] == sub_in.user_id for u in db.users)
-    plan_exists = any(p["id"] == sub_in.plan_id for p in db.plans)
+    conn = get_db_connection()
+    cursor = conn.cursor()
     
-    if not user_exists or not plan_exists:
-        raise HTTPException(status_code=404, detail="User or Plan not found")
+    cursor.execute("SELECT name FROM users WHERE id = ?", (sub_in.user_id,))
+    if not cursor.fetchone():
+        conn.close()
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    cursor.execute("SELECT plan_name, price, image_url FROM plans WHERE id = ?", (sub_in.plan_id,))
+    plan = cursor.fetchone()
+    if not plan:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Plan not found")
 
-    # Get plan info
-    plan = next((p for p in db.plans if p["id"] == sub_in.plan_id), None)
-    plan_name = plan["plan_name"] if plan else "Unknown Plan"
-    image_url = plan["image_url"] if plan else None
-    price = plan["price"] if plan else 0.0
-
-    new_sub = {
-        "id": db.sub_id_counter,
-        "user_id": sub_in.user_id,
-        "plan_id": sub_in.plan_id,
-        "plan_name": plan_name,
-        "image_url": image_url,
-        "price": price,
-        "status": "pending", # Initial status before payment
-        "start_date": None,
-        "renewal_date": None
-    }
-    db.sub_id_counter += 1
-    db.subscriptions.append(new_sub)
-    return new_sub
+    try:
+        cursor.execute(
+            """INSERT INTO subscriptions (user_id, plan_id, status) 
+               VALUES (?, ?, 'pending')""",
+            (sub_in.user_id, sub_in.plan_id)
+        )
+        sub_id = cursor.lastrowid
+        conn.commit()
+        
+        return {
+            "id": sub_id,
+            "user_id": sub_in.user_id,
+            "plan_id": sub_in.plan_id,
+            "plan_name": plan["plan_name"],
+            "price": plan["price"],
+            "image_url": plan["image_url"],
+            "status": "pending",
+            "start_date": None,
+            "end_date": None
+        }
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+    finally:
+        conn.close()
 
 @router.get("/", response_model=List[SubscriptionOut])
 def get_subscriptions(user_id: int = None, plan_id: int = None):
-    results = db.subscriptions
-    if user_id:
-        results = [s for s in results if s["user_id"] == user_id]
-    if plan_id:
-        results = [s for s in results if s["plan_id"] == plan_id]
+    conn = get_db_connection()
+    cursor = conn.cursor()
     
-    # Enrich with plan details (name, image, price)
-    enriched_results = []
-    for s in results:
-        sub_copy = s.copy()
-        plan = next((p for p in db.plans if p["id"] == s["plan_id"]), None)
+    query = """
+        SELECT s.*, p.plan_name, p.price, p.image_url 
+        FROM subscriptions s
+        JOIN plans p ON s.plan_id = p.id
+        WHERE 1=1
+    """
+    params = []
+    if user_id:
+        query += " AND s.user_id = ?"
+        params.append(user_id)
+    if plan_id:
+        query += " AND s.plan_id = ?"
+        params.append(plan_id)
         
-        if "plan_name" not in sub_copy or not sub_copy["plan_name"]:
-            sub_copy["plan_name"] = plan["plan_name"] if plan else "Unknown Plan"
-        
-        if "image_url" not in sub_copy or not sub_copy["image_url"]:
-            sub_copy["image_url"] = plan["image_url"] if plan else None
-        
-        if "price" not in sub_copy or not sub_copy["price"]:
-            sub_copy["price"] = plan["price"] if plan else 0.0
-            
-        enriched_results.append(sub_copy)
-        
-    return enriched_results
+    cursor.execute(query, params)
+    rows = cursor.fetchall()
+    conn.close()
+    
+    return [dict(row) for row in rows]
+
 @router.get("/{sub_id}", response_model=SubscriptionOut)
 def get_subscription(sub_id: int):
-    # Find the subscription
-    sub = next((s for s in db.subscriptions if s["id"] == sub_id), None)
-    if not sub:
-        raise HTTPException(status_code=404, detail="Subscription not found")
+    conn = get_db_connection()
+    cursor = conn.cursor()
     
-    # Enrich with plan details
-    sub_copy = sub.copy()
-    plan = next((p for p in db.plans if p["id"] == sub["plan_id"]), None)
+    cursor.execute("""
+        SELECT s.*, p.plan_name, p.price, p.image_url 
+        FROM subscriptions s
+        JOIN plans p ON s.plan_id = p.id
+        WHERE s.id = ?
+    """, (sub_id,))
     
-    if "plan_name" not in sub_copy or not sub_copy["plan_name"]:
-        sub_copy["plan_name"] = plan["plan_name"] if plan else "Unknown Plan"
+    row = cursor.fetchone()
+    conn.close()
     
-    if "image_url" not in sub_copy or not sub_copy["image_url"]:
-        sub_copy["image_url"] = plan["image_url"] if plan else None
-    
-    if "price" not in sub_copy or not sub_copy["price"]:
-        sub_copy["price"] = plan["price"] if plan else 0.0
+    if row:
+        return dict(row)
         
-    return sub_copy
+    raise HTTPException(status_code=404, detail="Subscription not found")

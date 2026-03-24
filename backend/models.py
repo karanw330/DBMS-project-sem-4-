@@ -2,7 +2,6 @@ from pydantic import BaseModel
 from typing import Optional, Literal
 from datetime import datetime
 
-# Users
 class UserBase(BaseModel):
     email: str
 
@@ -13,17 +12,19 @@ class UserRegister(UserBase):
     name: str
     password: str
     role: Literal["user", "company"]
-    upi_pin: Optional[int] = None  # Required for role='user', validated in auth.py
+    phone_number: str
+    upi_pin: Optional[int] = None  # Required for role='user'
 
 class UserOut(UserBase):
     id: int
     name: str
     role: str
+    phone_number: str
 
-# Plans
 class PlanCreate(BaseModel):
     company_id: int
     plan_name: str
+    description: str
     price: float
     duration_days: int
     image_url: Optional[str] = None
@@ -31,7 +32,6 @@ class PlanCreate(BaseModel):
 class PlanOut(PlanCreate):
     id: int
 
-# Subscriptions
 class SubscriptionCreate(BaseModel):
     user_id: int
     plan_id: int
@@ -45,9 +45,8 @@ class SubscriptionOut(BaseModel):
     price: Optional[float] = None
     status: str
     start_date: Optional[str]
-    renewal_date: Optional[str]
+    end_date: Optional[str]
 
-# Payments
 class PaymentCreate(BaseModel):
     subscription_id: int
     amount: float
@@ -55,6 +54,8 @@ class PaymentCreate(BaseModel):
 class PaymentOut(PaymentCreate):
     id: int
     status: str
+    payment_date: Optional[str] = None
+    payment_method: Optional[str] = None
 
 class UPIPaymentRequest(BaseModel):
     user_id: int
