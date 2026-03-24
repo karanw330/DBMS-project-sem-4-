@@ -9,6 +9,16 @@
 </head>
 
 <body>
+    <div id="backend-status-container"
+        style="position: fixed; top: 20px; right: 20px; display: flex; align-items: center; gap: 10px; z-index: 9999; background: rgba(13, 15, 20, 0.6); padding: 6px 14px; border-radius: 20px; border: 1px solid var(--card-border); backdrop-filter: blur(8px); transition: all 0.4s ease;">
+        <span id="backend-text"
+            style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 600; letter-spacing: 0.02em;">Waking up
+            backend...</span>
+        <div id="backend-status"
+            style="width: 10px; height: 10px; background: #ef4444; border-radius: 50%; box-shadow: 0 0 10px rgba(239, 68, 68, 0.5); transition: all 0.3s ease;">
+        </div>
+    </div>
+
     <div class="dashboard-layout" style="display: flex;">
         <!-- Left Side: Branding/Illustration -->
         <div style="flex: 1.2; background: linear-gradient(135deg, rgba(13, 15, 20, 0.8) 0%, rgba(26, 20, 46, 0.8) 50%, rgba(37, 27, 69, 0.8) 100%), url('https://lh3.googleusercontent.com/aida-public/AB6AXuBqYrk9yClnICC984wUpV72_uy2QLoBx9vXcgE9GQzkOJq7g2kmnDLqsxjlUlcsPl5N74OwXjRcDsBA9BPU126cOKtQjreqlB7VUqt7sZlnhfLesD6_g-9KoTTP5_ygBAssYfijnz6SCZOMyqx4wKnN5muLYQtsg2NPx-3jCbJiA6kjOsFr3FgNDgvDUuUETTKYfZBT8rbN_SBVKY1Ry0OAOQm4TZOyDt8FxOQoro4u0MKusOfuW70icBxa_MIYl_tyGu1O-DbnOODg'); background-size: cover; background-position: center; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 4rem; position: relative; overflow: hidden;"
@@ -69,6 +79,49 @@
 
     <script src="./config.js"></script>
     <script>
+        const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+        async function checkBackend(maxRetries = 20) {
+            let attempts = 0;
+            const statusIndicator = document.getElementById('backend-status');
+            const statusText = document.getElementById('backend-text');
+
+            while (attempts < maxRetries) {
+                try {
+                    const response = await fetch(`${API_URL}/auth/ping`, {
+                        method: 'GET',
+                        headers: { 'Content-Type': 'application/json' },
+                    });
+
+                    if (response.ok) {
+                        console.log("Welcome to Stellar!");
+                        statusIndicator.style.background = '#22c55e'; // Green
+                        statusIndicator.style.boxShadow = '0 0 10px rgba(34, 197, 94, 0.5)';
+                        statusText.textContent = 'Backend connected!';
+                        statusText.style.color = '#22c55e';
+                        return true;
+                    }
+                } catch (error) {
+                    console.log('Connection failed, retrying...');
+                    statusIndicator.style.background = '#ef4444'; // Red
+                    statusIndicator.style.boxShadow = '0 0 10px rgba(239, 68, 68, 0.5)';
+                    statusText.textContent = 'Waking up backend...';
+                    statusText.style.color = 'var(--text-secondary)';
+                }
+
+                attempts++;
+                console.log(`Backend not ready. Attempt ${attempts}/${maxRetries}. Retrying in 5s...`);
+                await wait(5000);
+            }
+
+            statusText.textContent = 'Backend offline';
+            statusText.style.color = '#ef4444';
+            console.error('Max retries reached. System offline.');
+            return false;
+        }
+
+        checkBackend();
+
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('email').value;

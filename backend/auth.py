@@ -4,6 +4,10 @@ from backend.data import users, user_id_counter
 
 router = APIRouter()
 
+@router.get("/ping")
+def ping():
+    return {"status": "pong"}
+
 @router.post("/login", response_model=UserOut)
 def login(user_in: UserLogin):
     for u in users:

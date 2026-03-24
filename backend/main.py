@@ -36,6 +36,7 @@ app.include_router(payments_router, prefix="/api/payments", tags=["Payments"])
 frontend_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend")
 app.mount("/", StaticFiles(directory=frontend_path, html=True), name="frontend")
 
+
 if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8000))
