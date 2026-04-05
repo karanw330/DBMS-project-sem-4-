@@ -148,7 +148,8 @@
                             </div>
                             <div style="grid-column: span 2;">
                                 <label>Description</label>
-                                <textarea id="description" required placeholder="Describe what's included in this plan..." 
+                                <textarea id="description" required
+                                    placeholder="Describe what's included in this plan..."
                                     style="background: rgba(255, 255, 255, 0.05); border: 1px solid var(--card-border); border-radius: 12px; padding: 0.8rem 1rem; color: white; width: 100%; min-height: 100px; font-family: inherit; font-size: 1rem;"></textarea>
                             </div>
                             <div style="grid-column: span 2;">
@@ -239,13 +240,13 @@
                     const res = await fetch(`${API_URL}/subscriptions/?plan_id=${plan.id}`);
                     if (!res.ok) continue;
                     const subs = await res.json();
-
+                    console.log(subs);
                     subs.forEach(s => {
                         allSubs.push(s);
                         const row = `
                             <tr>
                                 <td style="color: var(--text-secondary); font-family: monospace;">#${s.id.toString().slice(-6)}</td>
-                                <td style="color: white; font-weight: 500;">User #${s.user_id}</td>
+                                <td style="color: white; font-weight: 500;">${s.name}</td>
                                 <td><span style="color: var(--accent-secondary); font-weight: 600;">${plan.plan_name}</span></td>
                                 <td><span class="status-${s.status}">${s.status.toUpperCase()}</span></td>
                                 <td style="color: var(--text-secondary);">${s.end_date ? s.end_date.split('T')[0] : 'N/A'}</td>

@@ -37,6 +37,7 @@ class SubscriptionCreate(BaseModel):
     plan_id: int
 
 class SubscriptionOut(BaseModel):
+    name: Optional[str] = None
     id: int
     user_id: int
     plan_id: int

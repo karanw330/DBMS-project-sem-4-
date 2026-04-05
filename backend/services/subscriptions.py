@@ -53,9 +53,10 @@ def get_subscriptions(user_id: int = None, plan_id: int = None):
     cursor = conn.cursor()
     
     query = """
-        SELECT s.*, p.plan_name, p.price, p.image_url 
+        SELECT u.name, s.*, p.plan_name, p.price, p.image_url 
         FROM subscriptions s
         JOIN plans p ON s.plan_id = p.id
+        JOIN users u ON s.user_id = u.id
         WHERE 1=1
     """
     params = []
@@ -69,7 +70,9 @@ def get_subscriptions(user_id: int = None, plan_id: int = None):
     cursor.execute(query, params)
     rows = cursor.fetchall()
     conn.close()
-    
+    print("rows:")
+    print(rows)
+
     return [dict(row) for row in rows]
 
 @router.get("/{sub_id}", response_model=SubscriptionOut)
@@ -78,10 +81,11 @@ def get_subscription(sub_id: int):
     cursor = conn.cursor()
     
     cursor.execute("""
-        SELECT s.*, p.plan_name, p.price, p.image_url 
+        SELECT u.name, s.*, p.plan_name, p.price, p.image_url 
         FROM subscriptions s
         JOIN plans p ON s.plan_id = p.id
-        WHERE s.id = ?
+        JOIN users u ON s.user_id = u.id
+        WHERE s.id = ? 
     """, (sub_id,))
     
     row = cursor.fetchone()
