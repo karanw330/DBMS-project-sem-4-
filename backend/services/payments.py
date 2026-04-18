@@ -26,10 +26,7 @@ def convert_payment(pay_in: PaymentCreate):
             conn.close()
             raise HTTPException(status_code=404, detail="Subscription not found")
         
-        now = datetime.now()
-        start_date = now.isoformat()
-        end_date = (now + timedelta(days=sub["duration_days"])).isoformat()
-        payment_date = now.isoformat()
+        payment_date = datetime.now().isoformat()
 
         cursor.execute(
             """INSERT INTO payments (subscription_id, amount, status, payment_date, payment_method) 
@@ -37,11 +34,6 @@ def convert_payment(pay_in: PaymentCreate):
             (pay_in.subscription_id, pay_in.amount, payment_date)
         )
         payment_id = cursor.lastrowid
-
-        cursor.execute(
-            "UPDATE subscriptions SET status = 'active', start_date = ?, end_date = ? WHERE id = ?",
-            (start_date, end_date, pay_in.subscription_id)
-        )
 
         conn.commit()
         
@@ -116,20 +108,12 @@ def upi_payment(req: UPIPaymentRequest):
             conn.close()
             raise HTTPException(status_code=404, detail="Subscription not found")
         
-        now = datetime.now()
-        start_date = now.isoformat()
-        end_date = (now + timedelta(days=sub["duration_days"])).isoformat()
-        payment_date = now.isoformat()
+        payment_date = datetime.now().isoformat()
 
         cursor.execute(
             """INSERT INTO payments (subscription_id, amount, status, payment_date, payment_method) 
                VALUES (?, ?, 'success', ?, 'UPI')""",
             (req.subscription_id, sub["price"], payment_date)
-        )
-        
-        cursor.execute(
-            "UPDATE subscriptions SET status = 'active', start_date = ?, end_date = ? WHERE id = ?",
-            (start_date, end_date, req.subscription_id)
         )
 
         conn.commit()

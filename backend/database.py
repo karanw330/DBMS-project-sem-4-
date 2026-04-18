@@ -81,6 +81,92 @@ def init_db():
     )
     """)
 
+    # --- Triggers for Automation and Integrity ---
+
+    # 1. Automatically activate subscription and set dates after successful payment
+    cursor.execute("""
+    CREATE TRIGGER IF NOT EXISTS activate_subscription_after_payment
+    AFTER INSERT ON payments
+    WHEN NEW.status = 'success'
+    BEGIN
+        UPDATE subscriptions
+        SET status = 'active',
+            start_date = datetime('now'),
+            end_date = datetime('now', '+' || (
+                SELECT p.duration_days 
+                FROM plans p 
+                JOIN subscriptions s ON s.plan_id = p.id 
+                WHERE s.id = NEW.subscription_id
+            ) || ' days')
+        WHERE id = NEW.subscription_id;
+    END;
+    """)
+
+    # 2. Prevent non-users (companies) from subscribing
+    cursor.execute("""
+    CREATE TRIGGER IF NOT EXISTS validate_subscriber_role
+    BEFORE INSERT ON subscriptions
+    BEGIN
+        SELECT CASE
+            WHEN (SELECT role FROM users WHERE id = NEW.user_id) <> 'user'
+            THEN RAISE(ABORT, 'Error: Only users can subscribe to plans.')
+        END;
+    END;
+    """)
+
+    # 3. Ensure payment amount matches plan price
+    cursor.execute("""
+    CREATE TRIGGER IF NOT EXISTS validate_payment_amount
+    BEFORE INSERT ON payments
+    BEGIN
+        SELECT CASE
+            WHEN NEW.amount <> (
+                SELECT p.price 
+                FROM plans p 
+                JOIN subscriptions s ON s.plan_id = p.id 
+                WHERE s.id = NEW.subscription_id
+            )
+            THEN RAISE(ABORT, 'Error: Payment amount must match plan price.')
+        END;
+    END;
+    """)
+
+    # 4. Prevent duplicate active subscriptions for the same plan
+    cursor.execute("""
+    CREATE TRIGGER IF NOT EXISTS prevent_subscription_overlap
+    BEFORE INSERT ON subscriptions
+    BEGIN
+        SELECT CASE
+            WHEN EXISTS (
+                SELECT 1 FROM subscriptions 
+                WHERE user_id = NEW.user_id AND plan_id = NEW.plan_id AND status = 'active'
+            )
+            THEN RAISE(ABORT, 'Error: User already has an active subscription for this plan.')
+        END;
+    END;
+    """)
+
+    # --- Views for Reporting ---
+
+    cursor.execute("""
+    CREATE VIEW IF NOT EXISTS active_subscriptions_report AS
+    SELECT 
+        s.id AS subscription_id,
+        u.name AS user_name,
+        u.email AS user_email,
+        p.plan_name,
+        s.status,
+        s.start_date,
+        s.end_date,
+        pay.amount AS paid_amount,
+        pay.payment_date
+    FROM subscriptions s
+    JOIN users u ON s.user_id = u.id
+    JOIN plans p ON s.plan_id = p.id
+    LEFT JOIN payments pay ON pay.subscription_id = s.id AND pay.status = 'success'
+    WHERE s.status = 'active';
+    """)
+
     conn.commit()
 
     cursor.execute("SELECT COUNT(*) FROM users")
