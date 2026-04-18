@@ -249,7 +249,7 @@
                                 <td style="color: white; font-weight: 500;">${s.name}</td>
                                 <td><span style="color: var(--accent-secondary); font-weight: 600;">${plan.plan_name}</span></td>
                                 <td><span class="status-${s.status}">${s.status.toUpperCase()}</span></td>
-                                <td style="color: var(--text-secondary);">${s.end_date ? s.end_date.split('T')[0] : 'N/A'}</td>
+                                <td style="color: var(--text-secondary);">${s.end_date ? s.end_date.slice(0, 10) : 'N/A'}</td>
                             </tr>
                         `;
                         tbody.insertAdjacentHTML('beforeend', row);
@@ -285,7 +285,8 @@
                     totalSubs++;
                     if (s.status === 'active') {
                         totalRevenue += plan.price;
-                        const date = s.end_date ? s.end_date.split('T')[0] : null;
+                        // Use start_date for growth analytics (past/present) instead of end_date (future)
+                        const date = s.start_date ? s.start_date.slice(0, 10) : null;
                         if (dailyData[date] !== undefined) dailyData[date]++;
                     }
                 });

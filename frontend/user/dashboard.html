@@ -129,7 +129,7 @@
                                         </div>
                                     </td>
                                     <td><span class="status-${s.status}">${s.status.toUpperCase()}</span></td>
-                                    <td style="color: var(--text-secondary);">${s.end_date ? s.end_date.split('T')[0] : '-'}</td>
+                                    <td style="color: var(--text-secondary);">${s.end_date ? s.end_date.slice(0, 10) : '-'}</td>
                                     <td>
                                         <div style="display: flex; gap: 0.5rem; justify-content: flex-start;">
                                             ${isPending
