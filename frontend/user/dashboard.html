@@ -131,9 +131,14 @@
                                     <td><span class="status-${s.status}">${s.status.toUpperCase()}</span></td>
                                     <td style="color: var(--text-secondary);">${s.end_date ? s.end_date.split('T')[0] : '-'}</td>
                                     <td>
-                                        ${isPending
-                            ? `<a href="../payment/checkout.html?sub_id=${s.id}"><button style="padding: 0.5rem 1rem; font-size: 0.85rem;">Pay Now</button></a>`
-                            : '<span style="color: rgba(255,255,255,0.2);">Complete</span>'}
+                                        <div style="display: flex; gap: 0.5rem; justify-content: flex-start;">
+                                            ${isPending
+                                ? `<a href="../payment/checkout.html?sub_id=${s.id}"><button style="padding: 0.5rem 1rem; font-size: 0.85rem;">Pay Now</button></a>`
+                                : `<span style="color: rgba(255,255,255,0.2); display: flex; align-items: center; padding: 0.5rem 0;">${s.status === 'cancelled' ? 'Cancelled' : 'Complete'}</span>`}
+                                            
+                                            ${(s.status === 'pending' || s.status === 'active') 
+                                ? `<button onclick="cancelSubscription(${s.id})" style="padding: 0.5rem 1rem; font-size: 0.85rem; background-color: transparent; border: 1px solid var(--danger); color: var(--danger);">Cancel</button>` : ''}
+                                        </div>
                                     </td>
                                 </tr>`;
                 }).join('')}
@@ -141,6 +146,23 @@
                 </table>`;
             } catch (err) {
                 container.innerHTML = `<p style="color:var(--danger); padding: 1rem;">Error: ${err.message}</p>`;
+            }
+        }
+
+        async function cancelSubscription(subId) {
+            if (!confirm("Are you sure you want to cancel this subscription?")) return;
+            try {
+                const res = await fetch(`${API_URL}/subscriptions/${subId}/cancel`, {
+                    method: 'PUT'
+                });
+                if (res.ok) {
+                    loadMySubs(); // refresh list
+                } else {
+                    const data = await res.json();
+                    alert("Failed to cancel: " + (data.detail || "Unknown error"));
+                }
+            } catch (err) {
+                alert("Error: " + err.message);
             }
         }
 

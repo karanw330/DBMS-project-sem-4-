@@ -95,3 +95,26 @@ def get_subscription(sub_id: int):
         return dict(row)
         
     raise HTTPException(status_code=404, detail="Subscription not found")
+
+@router.put("/{sub_id}/cancel")
+def cancel_subscription(sub_id: int):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT id FROM subscriptions WHERE id = ?", (sub_id,))
+    sub = cursor.fetchone()
+    
+    if not sub:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Subscription not found")
+        
+    try:
+        cursor.execute("UPDATE subscriptions SET status = 'cancelled' WHERE id = ?", (sub_id,))
+        conn.commit()
+        return {"status": "success", "message": "Subscription cancelled"}
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+    finally:
+        conn.close()
+
